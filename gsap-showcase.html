@@ -1323,12 +1323,26 @@ function lazyLoadVideosOnApproach(sectionSelector, container, margin) {
   const trigger = () => {
     if (done) return;
     done = true;
-    container.querySelectorAll('video[data-src]').forEach(video => {
-      video.src = video.dataset.src;
-      video.removeAttribute('data-src');
-      video.setAttribute('preload', 'auto');
-      video.load();
-      ensureAutoplay(video);
+    // on mobile, kicking off a dozen video fetches in the same instant
+    // makes them all fight over a single constrained LTE connection and
+    // none of them finish — stagger them instead so each one actually
+    // gets a fair shot at the pipe (desktop stays instant/unstaggered,
+    // since bandwidth isn't the bottleneck there)
+    const stagger = window.innerWidth <= 900 ? 180 : 0;
+    const seen = new Set();
+    container.querySelectorAll('video[data-src]').forEach((video, i) => {
+      const src = video.dataset.src;
+      // repeats of the same clip ride the browser's HTTP cache once the
+      // first copy lands, so they don't need their own staggered slot
+      const delay = seen.has(src) ? 0 : stagger * seen.size;
+      seen.add(src);
+      setTimeout(() => {
+        video.src = src;
+        video.removeAttribute('data-src');
+        video.setAttribute('preload', 'auto');
+        video.load();
+        ensureAutoplay(video);
+      }, delay);
     });
     io.disconnect();
     lenis.off('scroll', scrollFallback);
@@ -1833,7 +1847,7 @@ gsap.fromTo('.work-heading',
   ).join('');
   const cards = gsap.utils.toArray(stage.querySelectorAll('.cf-card'));
 
-  lazyLoadVideosOnApproach('.h-texts-3', stage, window.innerWidth <= 900 ? 2200 : 600);
+  lazyLoadVideosOnApproach('.h-texts-3', stage, window.innerWidth <= 900 ? 1400 : 600);
   const N = cards.length;
   const anglePerCard = 22;  // deg — how tightly the deck bows around the arc
   const radius = 720;       // px — how deep the arc bows away from the viewer
@@ -2064,7 +2078,7 @@ gsap.fromTo('.work-heading',
     cards.push(card);
   }
 
-  lazyLoadVideosOnApproach('.diag-cards-section', stage, window.innerWidth <= 900 ? 2200 : 600);
+  lazyLoadVideosOnApproach('.diag-cards-section', stage, window.innerWidth <= 900 ? 1400 : 600);
 
   const scaleTo = cards.map(card => gsap.quickTo(card, 'scale', { duration: 0.3, ease: 'power3.out' }));
   cards.forEach((card, i) => {
