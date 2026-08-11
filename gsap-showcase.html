@@ -1833,7 +1833,7 @@ gsap.fromTo('.work-heading',
   ).join('');
   const cards = gsap.utils.toArray(stage.querySelectorAll('.cf-card'));
 
-  lazyLoadVideosOnApproach('.h-texts-3', stage);
+  lazyLoadVideosOnApproach('.h-texts-3', stage, window.innerWidth <= 900 ? 2200 : 600);
   const N = cards.length;
   const anglePerCard = 22;  // deg — how tightly the deck bows around the arc
   const radius = 720;       // px — how deep the arc bows away from the viewer
@@ -2064,7 +2064,7 @@ gsap.fromTo('.work-heading',
     cards.push(card);
   }
 
-  lazyLoadVideosOnApproach('.diag-cards-section', stage);
+  lazyLoadVideosOnApproach('.diag-cards-section', stage, window.innerWidth <= 900 ? 2200 : 600);
 
   const scaleTo = cards.map(card => gsap.quickTo(card, 'scale', { duration: 0.3, ease: 'power3.out' }));
   cards.forEach((card, i) => {
