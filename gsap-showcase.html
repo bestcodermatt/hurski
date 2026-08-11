@@ -33,6 +33,16 @@
     --accent:#d9ff3d;
   }
   *{ cursor: none; }
+
+  /* iOS Safari draws its own big "tap to play" button over any <video>
+     that isn't actively playing — kill it so a stalled/paused video
+     never shows a broken-looking play icon */
+  video::-webkit-media-controls-start-playback-button{
+    display:none !important;
+    -webkit-appearance:none;
+    pointer-events:none;
+  }
+  video::-webkit-media-controls{ display:none !important; }
   html.lenis, html.lenis body{ height:auto; }
   .lenis.lenis-smooth{ scroll-behavior:auto !important; }
 
@@ -865,12 +875,13 @@
 
     /* hero — stack headline above tagline, both left-aligned, full width */
     .hero-headline{
-      left:20px; right:20px; bottom:195px;
+      left:20px; right:20px; bottom:200px;
       max-width:none;
-      font-size:clamp(2.1rem, 9vw, 3rem);
+      font-size:clamp(2.4rem, 10.5vw, 3.4rem);
+      line-height:1.18;
     }
     .hero-tagline{
-      left:20px; right:20px; bottom:105px;
+      left:20px; right:20px; bottom:130px;
       max-width:none;
       font-size:16px; line-height:1.4;
     }
@@ -903,10 +914,13 @@
     .footer-email{ font-size:clamp(2rem, 10vw, 3.2rem); }
     .footer-logo-wrap{ margin:44px auto 20px; }
 
-    /* the process section */
-    .process-section{ padding:100px 20px 0; min-height:calc(154vw + 260px); }
+    /* the process section — position the globe with `top` instead of
+       `bottom` so it sits right under the text with no dead gap, and
+       let the section crop its bottom (the pins are all in the upper
+       half of the sphere anyway) */
+    .process-section{ padding:90px 20px 0; min-height:0; height:600px; }
     .process-headline{ font-size:clamp(1.15rem, 4.8vw, 1.6rem); }
-    .process-globe-wrap{ bottom:-22%; }
+    .process-globe-wrap{ position:absolute; top:140px; bottom:auto; }
 
     /* coverflow carousel — shorter runway + smaller cards so they fit the screen */
     .pin-height-3{ height:200vh; }
@@ -1228,7 +1242,6 @@
 
 <script>
 gsap.registerPlugin(ScrollTrigger);
-document.querySelectorAll('video[autoplay]').forEach(v => ensureAutoplay(v));
 
 /* ---------- 1. Lenis smooth scroll <-> ScrollTrigger ---------- */
 const lenis = new Lenis({
@@ -1245,6 +1258,7 @@ lenis.stop();
    if it's called before enough data is buffered, leaving the native
    "tap to play" button stuck on screen. Wait for real readiness and
    retry so playback always actually starts. ---------- */
+const __autoplayVideos = [];
 function ensureAutoplay(video) {
   video.muted = true;
   video.defaultMuted = true;
@@ -1252,6 +1266,7 @@ function ensureAutoplay(video) {
   video.playsInline = true;
   video.setAttribute('playsinline', '');
   video.autoplay = true;
+  __autoplayVideos.push(video);
 
   const tryPlay = () => { video.play().catch(() => {}); };
   const reveal = () => { video.classList.add('is-ready'); };
@@ -1271,6 +1286,24 @@ function ensureAutoplay(video) {
     if (!video.ended && document.visibilityState === 'visible') tryPlay();
   });
 }
+
+// iOS Low Power Mode blocks purely-programmatic autoplay outright, but
+// still allows play() called from a genuine user gesture — so the very
+// first tap/click/scroll anywhere on the page sweeps through and resumes
+// anything that's still sitting paused.
+function __resumeAllVideos() {
+  __autoplayVideos.forEach(v => { if (v.paused && !v.ended) v.play().catch(() => {}); });
+}
+['touchstart', 'click', 'scroll', 'wheel'].forEach(evt => {
+  window.addEventListener(evt, __resumeAllVideos, { passive: true });
+});
+if (document.visibilityState) {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') __resumeAllVideos();
+  });
+}
+
+document.querySelectorAll('video[autoplay]').forEach(v => ensureAutoplay(v));
 
 /* ---------- 1b. Lazy video loading — only fetch/play videos once their
    section is about to scroll into view, so the hero video isn't fighting
