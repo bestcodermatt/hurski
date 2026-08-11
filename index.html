@@ -1196,6 +1196,7 @@
 
 <script>
 gsap.registerPlugin(ScrollTrigger);
+document.querySelectorAll('video[autoplay]').forEach(v => ensureAutoplay(v));
 
 /* ---------- 1. Lenis smooth scroll <-> ScrollTrigger ---------- */
 const lenis = new Lenis({
@@ -1208,7 +1209,35 @@ gsap.ticker.add(time => lenis.raf(time * 1000));
 gsap.ticker.lagSmoothing(0);
 lenis.stop();
 
-/* ---------- 1a. Lazy video loading — only fetch/play videos once their
+/* ---------- 1a. Robust autoplay — mobile Safari silently rejects play()
+   if it's called before enough data is buffered, leaving the native
+   "tap to play" button stuck on screen. Wait for real readiness and
+   retry so playback always actually starts. ---------- */
+function ensureAutoplay(video) {
+  video.muted = true;
+  video.defaultMuted = true;
+  video.setAttribute('muted', '');
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.autoplay = true;
+
+  const tryPlay = () => { video.play().catch(() => {}); };
+
+  if (video.readyState >= 2) { // HAVE_CURRENT_DATA or better
+    tryPlay();
+  } else {
+    video.addEventListener('loadeddata', tryPlay, { once: true });
+    video.addEventListener('canplay', tryPlay, { once: true });
+  }
+  // if the browser paused it for any reason (tab backgrounding, low
+  // power mode, a stalled buffer), pick it back up once it can resume
+  video.addEventListener('canplaythrough', tryPlay);
+  video.addEventListener('pause', () => {
+    if (!video.ended && document.visibilityState === 'visible') tryPlay();
+  });
+}
+
+/* ---------- 1b. Lazy video loading — only fetch/play videos once their
    section is about to scroll into view, so the hero video isn't fighting
    a dozen other clips for bandwidth on first load. ---------- */
 function lazyLoadVideosOnApproach(sectionSelector, container) {
@@ -1224,7 +1253,7 @@ function lazyLoadVideosOnApproach(sectionSelector, container) {
       video.removeAttribute('data-src');
       video.setAttribute('preload', 'auto');
       video.load();
-      video.play().catch(() => {});
+      ensureAutoplay(video);
     });
     io.disconnect();
     lenis.off('scroll', scrollFallback);
@@ -1426,6 +1455,7 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
      timeline above once it's ready to play smoothly (or after a hard
      cap, so a slow connection never leaves the visitor stuck here). */
   const heroVideoEl = document.querySelector('.hero-video');
+  ensureAutoplay(heroVideoEl);
   const holdTween = gsap.to(counterObj, {
     v: 94,
     duration: 7,
