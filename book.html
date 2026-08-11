@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Shoot — Hurski</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --fg:#f5f5f5;
+    --muted:#8a8a8a;
+    --line:#242424;
+    --accent:#ff3b30;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family:'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+    overflow-x:hidden;
+  }
+  a{ color:inherit; }
+
+  /* dot backdrop, matches the main site */
+  body{
+    background-image:radial-gradient(rgba(255,255,255,0.09) 1px, transparent 1px);
+    background-size:26px 26px;
+  }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:26px 6vw;
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    text-decoration:none;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--fg);
+  }
+  .logo img{ width:30px; height:30px; }
+  .back-link{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px; letter-spacing:0.06em; text-transform:uppercase;
+    text-decoration:none; color:var(--muted);
+    transition:color 0.25s ease;
+  }
+  .back-link:hover{ color:var(--fg); }
+
+  .wrap{
+    max-width:720px;
+    margin:0 auto;
+    padding:40px 6vw 120px;
+  }
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 18px;
+    display:flex; align-items:center; gap:9px;
+  }
+  .eyebrow-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--accent);
+    animation:blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink{ 50%{ opacity:.2; } }
+
+  h1{
+    font-family:'Anton', 'Schibsted Grotesk', sans-serif;
+    font-weight:400;
+    font-size:clamp(2.6rem, 7vw, 4.6rem);
+    line-height:0.98; letter-spacing:-0.01em;
+    text-transform:uppercase;
+    margin:0 0 18px;
+  }
+  .lead{
+    font-size:clamp(1rem, 1.6vw, 1.2rem);
+    line-height:1.6;
+    color:rgba(245,245,245,0.65);
+    max-width:520px;
+    margin:0 0 56px;
+  }
+
+  form{ display:flex; flex-direction:column; gap:28px; }
+
+  .field{ display:flex; flex-direction:column; gap:10px; }
+  .field label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .field label .req{
+    color:var(--accent);
+    margin-left:4px;
+  }
+  .field label .opt{
+    color:#555;
+    text-transform:none;
+    letter-spacing:0;
+    margin-left:6px;
+    font-size:11px;
+  }
+
+  input, select, textarea{
+    width:100%;
+    background:#131313;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 16px;
+    color:var(--fg);
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:1rem;
+    outline:none;
+    transition:border-color 0.25s ease, background 0.25s ease;
+    appearance:none;
+    -webkit-appearance:none;
+  }
+  textarea{ resize:vertical; min-height:110px; font-family:'Schibsted Grotesk', sans-serif; }
+  input::placeholder, textarea::placeholder{ color:#4a4a4a; }
+
+  select{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%238a8a8a' stroke-width='1.6'%3E%3Cpath d='M5 7l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 16px center;
+    background-size:16px;
+    padding-right:44px;
+    cursor:pointer;
+  }
+  select option{ background:#131313; color:var(--fg); }
+
+  input:focus, select:focus, textarea:focus{
+    border-color:var(--accent);
+    background:#161010;
+  }
+
+  /* row layout for pairs on wider screens */
+  .field-row{
+    display:grid; grid-template-columns:1fr 1fr; gap:20px;
+  }
+
+  /* validation state, applied via JS once the visitor tries to submit */
+  form.was-validated input:invalid,
+  form.was-validated select:invalid,
+  form.was-validated textarea:invalid{
+    border-color:var(--accent);
+    background:rgba(255,59,48,0.06);
+  }
+  .field-error{
+    display:none;
+    font-size:12.5px;
+    color:var(--accent);
+    font-family:'JetBrains Mono', monospace;
+  }
+  form.was-validated input:invalid ~ .field-error,
+  form.was-validated select:invalid ~ .field-error,
+  form.was-validated textarea:invalid ~ .field-error{
+    display:block;
+  }
+
+  .submit-btn{
+    margin-top:12px;
+    display:inline-flex; align-items:center; justify-content:center;
+    gap:10px;
+    background:var(--accent);
+    color:#0a0a0a;
+    border:none;
+    border-radius:999px;
+    padding:20px 36px;
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:1.05rem; font-weight:700;
+    letter-spacing:-0.01em;
+    cursor:pointer;
+    transition:transform 0.25s cubic-bezier(0.16,1,0.3,1), background 0.25s ease;
+    width:100%;
+  }
+  .submit-btn:hover{ background:#ff5147; transform:translateY(-2px); }
+  .submit-btn:active{ transform:translateY(0); }
+  .submit-btn:disabled{ opacity:0.6; cursor:default; transform:none; }
+
+  .hint{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px; color:#555;
+    text-align:center;
+    margin-top:2px;
+  }
+
+  /* success state */
+  .success-panel{
+    display:none;
+    text-align:center;
+    padding:70px 20px;
+  }
+  .success-panel.is-visible{ display:block; }
+  .success-panel h2{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    font-size:clamp(2rem, 5vw, 3rem);
+    text-transform:uppercase;
+    margin:0 0 14px;
+  }
+  .success-panel p{
+    color:rgba(245,245,245,0.65);
+    font-size:1.05rem;
+    margin:0 0 30px;
+  }
+  .success-panel a{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    text-decoration:none; color:var(--accent);
+  }
+
+  @media (max-width:640px){
+    .field-row{ grid-template-columns:1fr; gap:28px; }
+    header{ padding:20px 6vw; }
+    .wrap{ padding:24px 6vw 90px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    <img src="symbol_white.png" alt="Hurski">
+    HURSKI
+  </a>
+  <a class="back-link" href="index.html">← Back</a>
+</header>
+
+<div class="wrap">
+  <p class="eyebrow"><span class="eyebrow-dot"></span>Book a shoot</p>
+  <h1>Let's get your<br>shop on camera.</h1>
+  <p class="lead">Fill in a few details about your shop and what you need — I'll follow up with availability and exact pricing within a day.</p>
+
+  <form id="bookForm" action="https://formsubmit.co/uxhurski@gmail.com" method="POST" novalidate>
+    <!-- FormSubmit config -->
+    <input type="hidden" name="_subject" value="New booking request — Hurski">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_next" value="https://hurski.space/book.html?sent=1">
+
+    <div class="field-row">
+      <div class="field">
+        <label for="f-name">Your name<span class="req">*</span></label>
+        <input id="f-name" name="Name" type="text" placeholder="John Smith" required>
+        <span class="field-error">Please enter your name.</span>
+      </div>
+      <div class="field">
+        <label for="f-company">Company name<span class="req">*</span></label>
+        <input id="f-company" name="Company" type="text" placeholder="e.g. Elite Auto Wraps" required>
+        <span class="field-error">Please enter your company name.</span>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="f-size">Company size<span class="req">*</span></label>
+        <select id="f-size" name="Company size" required>
+          <option value="" disabled selected>Select one</option>
+          <option value="1-5 employees">1–5 employees</option>
+          <option value="6-15 employees">6–15 employees</option>
+          <option value="16-50 employees">16–50 employees</option>
+          <option value="50+ employees">50+ employees</option>
+        </select>
+        <span class="field-error">Please select a company size.</span>
+      </div>
+      <div class="field">
+        <label for="f-location">Location<span class="req">*</span></label>
+        <select id="f-location" name="Location" required>
+          <option value="" disabled selected>Select one</option>
+          <option value="Toronto, ON">Toronto, ON</option>
+          <option value="Hamilton, ON">Hamilton, ON</option>
+          <option value="Other Ontario city">Other Ontario city</option>
+          <option value="New York State">New York State</option>
+          <option value="Other">Other</option>
+        </select>
+        <span class="field-error">Please select your location.</span>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="f-email">Email<span class="req">*</span></label>
+        <input id="f-email" name="Email" type="email" placeholder="you@company.com" required>
+        <span class="field-error">Please enter a valid email.</span>
+      </div>
+      <div class="field">
+        <label for="f-phone">Phone<span class="opt">optional</span></label>
+        <input id="f-phone" name="Phone" type="tel" placeholder="(647) 555-0123">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="f-link">Website or social link<span class="opt">optional</span></label>
+      <input id="f-link" name="Website / Social" type="text" placeholder="instagram.com/yourshop">
+    </div>
+
+    <div class="field">
+      <label for="f-message">What do you need?<span class="opt">optional</span></label>
+      <textarea id="f-message" name="Details" placeholder="A quick note on what you're looking for — a single shoot, ongoing content, a brand film, etc."></textarea>
+    </div>
+
+    <button class="submit-btn" type="submit">Book Now →</button>
+    <p class="hint">Goes straight to my inbox — I reply within 24 hours.</p>
+  </form>
+
+  <div class="success-panel" id="successPanel">
+    <h2>Got it.</h2>
+    <p>Thanks — your request is in. I'll get back to you within 24 hours.</p>
+    <a href="index.html">← Back to the site</a>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('bookForm');
+  const successPanel = document.getElementById('successPanel');
+
+  // fallback path: if fetch was blocked and the browser did a real
+  // POST + redirect, FormSubmit sends the visitor back here with
+  // ?sent=1 — show the same success state in that case too
+  if (new URLSearchParams(location.search).get('sent') === '1') {
+    form.style.display = 'none';
+    successPanel.classList.add('is-visible');
+  }
+
+  form.addEventListener('submit', (e) => {
+    if (!form.checkValidity()) {
+      e.preventDefault();
+      form.classList.add('was-validated');
+      const firstInvalid = form.querySelector(':invalid');
+      if (firstInvalid) firstInvalid.focus();
+      return;
+    }
+
+    // submit in the background via fetch so we can show our own
+    // success state instead of redirecting to FormSubmit's page
+    e.preventDefault();
+    const btn = form.querySelector('.submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(() => {
+        form.style.display = 'none';
+        successPanel.classList.add('is-visible');
+      })
+      .catch(() => {
+        // fall back to a normal form submit (with redirect) if fetch is blocked
+        form.submit();
+      });
+  });
+</script>
+</body>
+</html>
