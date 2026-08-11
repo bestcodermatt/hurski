@@ -496,7 +496,10 @@
     width:100%; height:100%;
     display:block;
     pointer-events:none;
+    opacity:0;
+    transition:opacity 0.5s ease;
   }
+  .process-globe.is-ready{ opacity:1; }
   .process-globe-wrap{
     position:absolute; left:50%; bottom:-6%;
     transform:translateX(-50%);
@@ -846,12 +849,12 @@
 
     /* hero — stack headline above tagline, both left-aligned, full width */
     .hero-headline{
-      left:20px; right:20px; bottom:132px;
+      left:20px; right:20px; bottom:195px;
       max-width:none;
-      font-size:clamp(1.9rem, 8vw, 2.8rem);
+      font-size:clamp(2.1rem, 9vw, 3rem);
     }
     .hero-tagline{
-      left:20px; right:20px; bottom:28px;
+      left:20px; right:20px; bottom:105px;
       max-width:none;
       font-size:16px; line-height:1.4;
     }
@@ -887,6 +890,7 @@
     /* the process section */
     .process-section{ padding:100px 20px 0; min-height:calc(154vw + 260px); }
     .process-headline{ font-size:clamp(1.15rem, 4.8vw, 1.6rem); }
+    .process-globe-wrap{ bottom:-22%; }
 
     /* coverflow carousel — shorter runway + smaller cards so they fit the screen */
     .pin-height-3{ height:200vh; }
@@ -915,8 +919,8 @@
   }
 
   @media (max-width:480px){
-    .hero-headline{ bottom:150px; font-size:clamp(1.7rem, 9.5vw, 2.3rem); }
-    .hero-tagline{ font-size:14.5px; }
+    .hero-headline{ bottom:210px; font-size:clamp(1.9rem, 10vw, 2.5rem); }
+    .hero-tagline{ bottom:115px; font-size:14.5px; }
     .work-heading{ font-size:clamp(3rem, 20vw, 4.4rem); }
     .footer-email{ font-size:clamp(1.6rem, 9.5vw, 2.4rem); }
     .cf-card{ width:66vw; height:86vw; margin-top:calc(86vw / -2); margin-left:calc(66vw / -2); }
@@ -1064,11 +1068,11 @@
   <div class="process-badge"><span class="badge-dot"></span>The Process</div>
   <h2 class="process-headline">
     <span class="process-line">A workflow that turns your daily work</span>
-    <span class="process-line">into content that actually sells the craft —</span>
+    <span class="process-line">into content that actually sells the craft</span>
     <span class="process-line process-muted">shot, edited, and delivered fast</span>
   </h2>
   <div class="process-globe-wrap">
-    <video class="process-globe" src="world_animation.mp4" autoplay muted loop playsinline></video>
+    <video class="process-globe" data-src="world_animation.mp4" muted loop playsinline preload="none"></video>
 
     <div class="gw-pin gw-pin-video" style="left:38%; top:33%;">
       <span class="gw-pin-dot"></span><span class="gw-pin-label">Toronto</span>
@@ -1666,6 +1670,7 @@ gsap.timeline({
 }, '-=1');
 
 /* ---------- 4b1. City labels fade in smoothly over the globe video ---------- */
+lazyLoadVideosOnApproach('.process-section', document.querySelector('.process-globe-wrap'));
 (() => {
   const videoPins = document.querySelectorAll('.gw-pin-video');
 
