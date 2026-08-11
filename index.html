@@ -40,7 +40,6 @@
   video::-webkit-media-controls-start-playback-button{
     display:none !important;
     -webkit-appearance:none;
-    pointer-events:none;
   }
   video::-webkit-media-controls{ display:none !important; }
   html.lenis, html.lenis body{ height:auto; }
@@ -84,6 +83,7 @@
   .hero-scrim{
     position:absolute; inset:0;
     background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.6) 100%);
+    pointer-events:none;
   }
   .hero-dots{
     position:absolute; inset:0;
@@ -918,7 +918,7 @@
        `bottom` so it sits right under the text with no dead gap, and
        let the section crop its bottom (the pins are all in the upper
        half of the sphere anyway) */
-    .process-section{ padding:90px 20px 0; min-height:0; height:600px; }
+    .process-section{ padding:90px 20px 0; min-height:0; height:660px; }
     .process-headline{ font-size:clamp(1.15rem, 4.8vw, 1.6rem); }
     .process-globe-wrap{ position:absolute; top:140px; bottom:auto; }
 
@@ -1285,6 +1285,12 @@ function ensureAutoplay(video) {
   video.addEventListener('pause', () => {
     if (!video.ended && document.visibilityState === 'visible') tryPlay();
   });
+  // a direct tap on the video itself (e.g. Low Power Mode's native
+  // "tap to resume" button) is the most reliable trigger of all —
+  // handle it explicitly instead of hoping the browser's own hit-test
+  // on its hidden controls works correctly on every iOS version
+  video.addEventListener('click', tryPlay);
+  video.addEventListener('touchend', tryPlay);
 }
 
 // iOS Low Power Mode blocks purely-programmatic autoplay outright, but
@@ -1308,9 +1314,10 @@ document.querySelectorAll('video[autoplay]').forEach(v => ensureAutoplay(v));
 /* ---------- 1b. Lazy video loading — only fetch/play videos once their
    section is about to scroll into view, so the hero video isn't fighting
    a dozen other clips for bandwidth on first load. ---------- */
-function lazyLoadVideosOnApproach(sectionSelector, container) {
+function lazyLoadVideosOnApproach(sectionSelector, container, margin) {
   const section = document.querySelector(sectionSelector);
   if (!section) return;
+  const m = margin || 600;
 
   let done = false;
   const trigger = () => {
@@ -1329,14 +1336,14 @@ function lazyLoadVideosOnApproach(sectionSelector, container) {
 
   const io = new IntersectionObserver((entries) => {
     if (entries.some(e => e.isIntersecting)) trigger();
-  }, { rootMargin: '600px 0px' });
+  }, { rootMargin: m + 'px 0px' });
   io.observe(section);
 
   // fallback in case IntersectionObserver callbacks don't fire promptly
   // in some environment (e.g. certain smooth-scroll/virtualization setups)
   const scrollFallback = () => {
     const rect = section.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 600 && rect.bottom > -600) trigger();
+    if (rect.top < window.innerHeight + m && rect.bottom > -m) trigger();
   };
   lenis.on('scroll', scrollFallback);
   scrollFallback();
@@ -1719,7 +1726,7 @@ gsap.timeline({
 }, '-=1');
 
 /* ---------- 4b1. City labels fade in smoothly over the globe video ---------- */
-lazyLoadVideosOnApproach('.process-section', document.querySelector('.process-globe-wrap'));
+lazyLoadVideosOnApproach('.process-section', document.querySelector('.process-globe-wrap'), 2000);
 (() => {
   const videoPins = document.querySelectorAll('.gw-pin-video');
 
