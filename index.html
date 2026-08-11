@@ -194,8 +194,8 @@
 
   .mobile-nav{
     position:fixed; inset:0; z-index:199;
-    display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
-    gap:22px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:26px;
     padding:32px;
     background:#0f0f0f;
     opacity:0; visibility:hidden;
@@ -208,10 +208,26 @@
     transition:opacity 0.4s ease, transform 0.4s ease, visibility 0s linear 0s;
   }
   .mobile-nav-link{
+    position:relative;
     color:#fff; text-decoration:none;
     font-family:'Schibsted Grotesk', sans-serif;
     font-size:clamp(2rem, 9vw, 2.8rem);
-    font-weight:700; letter-spacing:-0.02em;
+    font-weight:400; letter-spacing:-0.01em;
+    padding-bottom:4px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mobile-nav-link::after{
+    content:'';
+    position:absolute; left:0; bottom:0;
+    width:100%; height:2px;
+    background:#ff3b30;
+    transform:scaleX(0);
+    transform-origin:left center;
+    transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .mobile-nav-link:active::after,
+  .mobile-nav-link.is-pressed::after{
+    transform:scaleX(1);
   }
 
   /* scroll typewriter reveal */
@@ -2144,6 +2160,9 @@ document.querySelectorAll('.nav-link').forEach(link => {
 
   mobileNav.querySelectorAll('.mobile-nav-link').forEach(link => {
     link.addEventListener('click', closeMenu);
+    link.addEventListener('touchstart', () => link.classList.add('is-pressed'), { passive: true });
+    link.addEventListener('touchend', () => link.classList.remove('is-pressed'));
+    link.addEventListener('touchcancel', () => link.classList.remove('is-pressed'));
   });
 
   window.addEventListener('resize', () => {
