@@ -44,7 +44,11 @@
     font-size:13px; letter-spacing:0.06em; text-transform:uppercase;
     color:var(--fg);
   }
-  .logo img{ width:30px; height:30px; }
+  .logo img{ width:30px; height:30px; animation: spin-logo 6s linear infinite; }
+  @keyframes spin-logo{
+    from{ transform: rotate(0deg); }
+    to{ transform: rotate(360deg); }
+  }
   .back-link{
     font-family:'JetBrains Mono', monospace;
     font-size:13px; letter-spacing:0.06em; text-transform:uppercase;
@@ -82,7 +86,7 @@
     margin:0 0 18px;
   }
   .lead{
-    font-size:clamp(1rem, 1.6vw, 1.2rem);
+    font-size:clamp(0.85rem, 1.1vw, 0.95rem);
     line-height:1.6;
     color:rgba(245,245,245,0.65);
     max-width:520px;
@@ -141,6 +145,28 @@
     background:#161010;
   }
 
+  .pill-group{ display:flex; flex-wrap:wrap; gap:10px; }
+  .pill{ position:relative; }
+  .pill input{ position:absolute; opacity:0; width:0; height:0; }
+  .pill span{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:12px 20px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    background:#131313;
+    color:var(--fg);
+    font-size:0.92rem;
+    cursor:pointer;
+    transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    user-select:none;
+  }
+  .pill input:checked + span{
+    background:var(--fg);
+    color:#0a0a0a;
+    border-color:var(--fg);
+  }
+  .pill input:focus-visible + span{ outline:2px solid var(--accent); outline-offset:2px; }
+
   /* row layout for pairs on wider screens */
   .field-row{
     display:grid; grid-template-columns:1fr 1fr; gap:20px;
@@ -173,9 +199,10 @@
     color:#0a0a0a;
     border:none;
     border-radius:999px;
-    padding:20px 36px;
+    padding:26px 36px;
+    min-height:66px;
     font-family:'Schibsted Grotesk', sans-serif;
-    font-size:1.05rem; font-weight:700;
+    font-size:1.15rem; font-weight:700;
     letter-spacing:-0.01em;
     cursor:pointer;
     transition:transform 0.25s cubic-bezier(0.16,1,0.3,1), background 0.25s ease;
@@ -221,23 +248,19 @@
     .field-row{ grid-template-columns:1fr; gap:28px; }
     header{ padding:20px 6vw; }
     .wrap{ padding:24px 6vw 90px; }
+    .submit-btn{ min-height:72px; font-size:1.2rem; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <a class="logo" href="index.html">
-    <img src="symbol_white.png" alt="Hurski">
-    HURSKI
-  </a>
   <a class="back-link" href="index.html">← Back</a>
 </header>
 
 <div class="wrap">
   <p class="eyebrow"><span class="eyebrow-dot"></span>Book a shoot</p>
-  <h1>Let's get your<br>shop on camera.</h1>
-  <p class="lead">Fill in a few details about your shop and what you need — I'll follow up with availability and exact pricing within a day.</p>
+  <h1>Shop on camera.</h1>
 
   <form id="bookForm" action="https://formsubmit.co/uxhurski@gmail.com" method="POST" novalidate>
     <!-- FormSubmit config -->
@@ -245,6 +268,16 @@
     <input type="hidden" name="_template" value="table">
     <input type="hidden" name="_captcha" value="false">
     <input type="hidden" name="_next" value="https://hurski.space/book.html?sent=1">
+
+    <div class="field">
+      <label>What kind of shoot?<span class="req">*</span></label>
+      <div class="pill-group">
+        <label class="pill"><input type="radio" name="Project type" value="Content (Photo & Video)" required><span>Content (Photo & Video)</span></label>
+        <label class="pill"><input type="radio" name="Project type" value="Website" required><span>Website</span></label>
+        <label class="pill"><input type="radio" name="Project type" value="Branding" required><span>Branding</span></label>
+        <label class="pill"><input type="radio" name="Project type" value="Not sure yet" required><span>Not Sure Yet</span></label>
+      </div>
+    </div>
 
     <div class="field-row">
       <div class="field">
@@ -303,12 +336,11 @@
     </div>
 
     <div class="field">
-      <label for="f-message">What do you need?<span class="opt">optional</span></label>
-      <textarea id="f-message" name="Details" placeholder="A quick note on what you're looking for — a single shoot, ongoing content, a brand film, etc."></textarea>
+      <label for="f-message">What should we know?<span class="opt">optional</span></label>
+      <textarea id="f-message" name="Details" placeholder="Your goals, timeline, preferences — whatever helps."></textarea>
     </div>
 
-    <button class="submit-btn" type="submit">Book Now →</button>
-    <p class="hint">Goes straight to my inbox — I reply within 24 hours.</p>
+    <button class="submit-btn" type="submit">Send</button>
   </form>
 
   <div class="success-panel" id="successPanel">
