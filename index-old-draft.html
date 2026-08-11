@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matthew Hurski — Product Designer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #080808;
+      --white: #ffffff;
+      --gray: rgba(8,8,8,0.35);
+      --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--white);
+      color: var(--black);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 22px 40px;
+    }
+    .site-header .logo {
+      font-size: 14px; font-weight: 500; letter-spacing: 0.02em;
+      color: var(--black); text-decoration: none;
+    }
+    .site-header nav { display: flex; gap: 32px; }
+    .site-header nav a {
+      font-size: 14px; font-weight: 400;
+      color: var(--gray); text-decoration: none;
+      transition: color .2s;
+    }
+    .site-header nav a:hover { color: var(--black); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: stretch;
+      justify-content: center;
+      position: relative; overflow: hidden;
+      padding-top: 80px;
+    }
+
+    /* hero headline */
+    .hero-headline {
+      text-align: center;
+      font-size: clamp(28px, 4.2vw, 68px);
+      font-weight: 700; letter-spacing: -0.035em; line-height: 1.05;
+      color: var(--black); pointer-events: none; user-select: none;
+      padding: 0 40px 56px;
+    }
+
+    /* drag hint */
+    .drag-hint {
+      position: absolute; bottom: 36px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px; font-weight: 400; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--gray);
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; animation: fadeUp .8s ease 1.2s forwards;
+    }
+    .drag-hint::after {
+      content: ''; display: block;
+      width: 32px; height: 1px; background: var(--gray);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* ── CARDS TRACK ── */
+    .track-wrap {
+      width: 100%; position: relative; z-index: 1;
+      cursor: grab; user-select: none;
+      -webkit-user-select: none;
+    }
+    .track-wrap.dragging { cursor: grabbing; }
+
+    .track {
+      display: flex; gap: 14px;
+      padding: 0 calc(50vw - 220px);
+      will-change: transform; transition: none;
+    }
+    .track.snapping {
+      transition: transform .6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* ── CARD ── */
+    .card {
+      flex-shrink: 0;
+      width: 440px; height: 560px;
+      background: var(--black);
+      border-radius: 6px;
+      padding: 36px;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      color: var(--white);
+      position: relative; overflow: hidden;
+      transition: transform .3s ease;
+    }
+    .card:hover { transform: scale(1.015); }
+
+    .card-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .card-num {
+      font-size: 12px; font-weight: 400; letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.35);
+    }
+    .card-tag {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 5px 10px; border-radius: 100px;
+    }
+
+    .card-body { flex: 1; display: flex; align-items: flex-end; padding: 0 0 24px; }
+    .card-title {
+      font-size: 36px; font-weight: 700; line-height: 1.1;
+      letter-spacing: -0.025em;
+    }
+
+    .card-bottom {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 24px;
+    }
+    .card-desc {
+      font-size: 13px; color: rgba(255,255,255,0.45);
+      line-height: 1.55; max-width: 240px;
+    }
+    .card-arrow {
+      flex-shrink: 0;
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, border-color .2s;
+    }
+    .card:hover .card-arrow {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.4);
+    }
+    .card-arrow svg { width: 16px; height: 16px; stroke: #fff; }
+
+    /* card image overlay */
+    .card-img {
+      position: absolute; inset: 0;
+      background: linear-gradient(160deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* ── ABOUT ── */
+    .about {
+      max-width: 1200px; margin: 0 auto;
+      padding: 160px 40px 100px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 120px;
+      align-items: start;
+    }
+    .about-label {
+      font-size: 12px; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--gray);
+      margin-bottom: 32px;
+    }
+    .about-title {
+      font-size: clamp(32px, 4vw, 52px); font-weight: 700;
+      letter-spacing: -0.03em; line-height: 1.08;
+    }
+    .about-text {
+      padding-top: 8px;
+    }
+    .about-text p {
+      font-size: 16px; color: rgba(8,8,8,0.55);
+      line-height: 1.7; margin-bottom: 20px;
+    }
+    .about-text p:last-child { margin-bottom: 0; }
+
+    /* ── CONTACT ROW ── */
+    .contact {
+      max-width: 1200px; margin: 0 auto;
+      padding: 60px 40px 120px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid rgba(8,8,8,0.1);
+    }
+    .contact-email {
+      font-size: clamp(24px, 3.5vw, 48px); font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--black); text-decoration: none;
+      transition: opacity .2s;
+    }
+    .contact-email:hover { opacity: 0.5; }
+    .contact-links { display: flex; gap: 24px; }
+    .contact-links a {
+      font-size: 14px; color: var(--gray); text-decoration: none;
+      transition: color .2s;
+    }
+    .contact-links a:hover { color: var(--black); }
+
+    /* ── FOOTER ── */
+    footer {
+      max-width: 1200px; margin: 0 auto;
+      padding: 20px 40px 40px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    footer span { font-size: 13px; color: var(--gray); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      .site-header { padding: 18px 24px; }
+      .site-header nav { display: none; }
+      .side-word { display: none; }
+      .track { padding: 0 24px; }
+      .card { width: 300px; height: 420px; padding: 24px; }
+      .card-title { font-size: 26px; }
+      .about { grid-template-columns: 1fr; gap: 48px; padding: 100px 24px 60px; }
+      .contact { flex-direction: column; gap: 32px; align-items: flex-start; padding: 40px 24px 80px; }
+      footer { padding: 16px 24px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <a class="logo" href="#">Matthew Hurski</a>
+    <nav>
+      <a href="#about">About</a>
+      <a href="mailto:mateuszgrs96@gmail.com">Contact</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1 class="hero-headline">Every car has a reveal moment.<br>We capture it.</h1>
+
+    <div class="track-wrap" id="trackWrap">
+      <div class="track" id="track">
+
+        <a class="card" href="#" style="text-decoration:none">
+          <div class="card-img"></div>
+          <div class="card-top">
+            <span class="card-num">#001</span>
+            <span class="card-tag">HMI / XR</span>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Gesture Call<br>Control</h2>
+          </div>
+          <div class="card-bottom">
+            <p class="card-desc">XR-powered gesture recognition — accept or decline calls without touching the screen.</p>
+            <span class="card-arrow">
+              <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
+                <path d="M2 8h12M9 3l5 5-5 5"/>
+              </svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="card" href="#" style="text-decoration:none">
+          <div class="card-img"></div>
+          <div class="card-top">
+            <span class="card-num">#002</span>
+            <span class="card-tag">AI / Mobile</span>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">AI<br>Presence</h2>
+          </div>
+          <div class="card-bottom">
+            <p class="card-desc">Designing a contextual AI layer for the Meta ecosystem — present without being intrusive.</p>
+            <span class="card-arrow">
+              <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
+                <path d="M2 8h12M9 3l5 5-5 5"/>
+              </svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="card" href="#" style="text-decoration:none">
+          <div class="card-img"></div>
+          <div class="card-top">
+            <span class="card-num">#003</span>
+            <span class="card-tag">AR / Vision</span>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Meta<br>Gaze</h2>
+          </div>
+          <div class="card-bottom">
+            <p class="card-desc">A gaze-driven interaction model for AR — prototyped with computer vision for Meta Orion.</p>
+            <span class="card-arrow">
+              <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
+                <path d="M2 8h12M9 3l5 5-5 5"/>
+              </svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="card" href="#" style="text-decoration:none">
+          <div class="card-img"></div>
+          <div class="card-top">
+            <span class="card-num">#004</span>
+            <span class="card-tag">Health / VR</span>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Innorehab<br>Therapy</h2>
+          </div>
+          <div class="card-bottom">
+            <p class="card-desc">VR-based physiotherapy platform — turning rehabilitation exercises into immersive experiences.</p>
+            <span class="card-arrow">
+              <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
+                <path d="M2 8h12M9 3l5 5-5 5"/>
+              </svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="card" href="#" style="text-decoration:none">
+          <div class="card-img"></div>
+          <div class="card-top">
+            <span class="card-num">#005</span>
+            <span class="card-tag">AI / News</span>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Lens<br>AI</h2>
+          </div>
+          <div class="card-bottom">
+            <p class="card-desc">News that knows what matters to you — an adaptive feed built around signal, not volume.</p>
+            <span class="card-arrow">
+              <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
+                <path d="M2 8h12M9 3l5 5-5 5"/>
+              </svg>
+            </span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <p class="drag-hint">Drag to explore</p>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div>
+      <p class="about-label">About</p>
+      <h2 class="about-title">Product designer focused on interaction and emerging tech.</h2>
+    </div>
+    <div class="about-text">
+      <p>I design interfaces where the technology disappears and the experience takes over — HMI systems, XR interactions, AI-native products.</p>
+      <p>Currently based in Warsaw. Open to freelance projects and full-time roles in product design, UX, or interaction design.</p>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <div class="contact">
+    <a class="contact-email" href="mailto:mateuszgrs96@gmail.com">mateuszgrs96@gmail.com</a>
+    <div class="contact-links">
+      <a href="https://linkedin.com" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://dribbble.com" target="_blank" rel="noopener">Dribbble</a>
+    </div>
+  </div>
+
+  <footer>
+    <span>© 2025 Matthew Hurski</span>
+    <span>Product Designer</span>
+  </footer>
+
+  <script>
+    const wrap = document.getElementById('trackWrap');
+    const track = document.getElementById('track');
+
+    let isDragging = false;
+    let startX = 0;
+    let currentX = 0;
+    let velX = 0;
+    let lastX = 0;
+    let rafId = null;
+
+    function getMinX() {
+      return -(track.scrollWidth - window.innerWidth);
+    }
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
+    function applyX(x) {
+      track.style.transform = `translateX(${x}px)`;
+    }
+
+    // Mouse
+    wrap.addEventListener('mousedown', e => {
+      isDragging = true;
+      startX = e.clientX - currentX;
+      lastX = e.clientX;
+      velX = 0;
+      wrap.classList.add('dragging');
+      track.classList.remove('snapping');
+      cancelAnimationFrame(rafId);
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      velX = e.clientX - lastX;
+      lastX = e.clientX;
+      currentX = clamp(e.clientX - startX, getMinX(), 0);
+      applyX(currentX);
+    });
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      wrap.classList.remove('dragging');
+      momentum();
+    });
+
+    // Touch
+    wrap.addEventListener('touchstart', e => {
+      isDragging = true;
+      startX = e.touches[0].clientX - currentX;
+      lastX = e.touches[0].clientX;
+      velX = 0;
+      track.classList.remove('snapping');
+      cancelAnimationFrame(rafId);
+    }, { passive: true });
+    wrap.addEventListener('touchmove', e => {
+      if (!isDragging) return;
+      velX = e.touches[0].clientX - lastX;
+      lastX = e.touches[0].clientX;
+      currentX = clamp(e.touches[0].clientX - startX, getMinX(), 0);
+      applyX(currentX);
+    }, { passive: true });
+    wrap.addEventListener('touchend', () => {
+      isDragging = false;
+      momentum();
+    });
+
+    function momentum() {
+      if (Math.abs(velX) < 0.5) { snapToCard(); return; }
+      velX *= 0.94;
+      currentX = clamp(currentX + velX, getMinX(), 0);
+      applyX(currentX);
+      rafId = requestAnimationFrame(momentum);
+      if (Math.abs(velX) < 0.5) { cancelAnimationFrame(rafId); snapToCard(); }
+    }
+
+    function snapToCard() {
+      const cards = track.querySelectorAll('.card');
+      const cardW = cards[0].offsetWidth + 14; // gap
+      const offset = (window.innerWidth - cards[0].offsetWidth) / 2;
+      const snapIdx = Math.round((-currentX + offset - offset) / cardW);
+      const clampedIdx = clamp(Math.round(-currentX / cardW), 0, cards.length - 1);
+      const targetX = clamp(-clampedIdx * cardW, getMinX(), 0);
+      track.classList.add('snapping');
+      currentX = targetX;
+      applyX(currentX);
+      setTimeout(() => track.classList.remove('snapping'), 650);
+    }
+
+    // prevent link click after drag
+    let hasDragged = false;
+    wrap.addEventListener('mousedown', () => { hasDragged = false; });
+    document.addEventListener('mousemove', () => { if (isDragging) hasDragged = true; });
+    wrap.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', e => { if (hasDragged) e.preventDefault(); });
+    });
+  </script>
+</body>
+</html>

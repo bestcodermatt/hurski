@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Made With GSAP — Showcase Clone</title>
+
+<!-- Tailwind CDN (utility layout only, all animation is hand-rolled GSAP/Lenis) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Lenis smooth scroll CSS -->
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css">
+
+<!-- Schibsted Grotesk (Google Fonts) — used site-wide -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- JetBrains Mono (Google Fonts) — pill nav / mono accents -->
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<!-- Bebas Neue (Google Fonts) — hero tagline -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0f0f0f;
+    --fg:#f5f5f5;
+    --muted:#8a8a8a;
+    --line:#232323;
+    --accent:#d9ff3d;
+  }
+  *{ cursor: none; }
+  html.lenis, html.lenis body{ height:auto; }
+  .lenis.lenis-smooth{ scroll-behavior:auto !important; }
+
+  html,body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+    overflow-x:hidden;
+  }
+
+  ::selection{ background:var(--accent); color:#0f0f0f; }
+
+  /* custom cursor */
+  #cursor{
+    position:fixed; top:0; left:0; width:14px; height:14px;
+    border-radius:50%; background:var(--fg);
+    pointer-events:none; z-index:9999;
+    transform:translate(-50%,-50%);
+    mix-blend-mode:difference;
+  }
+  #cursor.hover{ width:64px; height:64px; }
+  #cursor.hover::after{ content:'View'; }
+  #cursor::after{
+    font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+    display:flex; align-items:center; justify-content:center;
+    width:100%; height:100%; opacity:0;
+  }
+  #cursor.hover::after{ opacity:1; color:#0f0f0f; }
+
+  /* hero — full-bleed video background */
+  .hero{
+    position:relative; height:100vh; overflow:hidden;
+    background:#050505; color:#fff;
+  }
+  .hero-video{
+    position:absolute; inset:0;
+    width:100%; height:100%; object-fit:cover;
+  }
+  .hero-scrim{
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.6) 100%);
+  }
+  .hero-dots{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
+  .hero-headline{
+    position:absolute; left:60px; bottom:80px;
+    max-width:640px;
+    font-family:'Anton', 'Schibsted Grotesk', sans-serif;
+    font-weight:400; font-size:clamp(2.2rem, 5vw, 4.2rem);
+    line-height:1.02; letter-spacing:-0.01em;
+    text-transform:uppercase;
+  }
+  .headline-line{ display:block; overflow:hidden; }
+  .hero-tagline{
+    position:absolute; right:60px; bottom:92px;
+    max-width:360px; text-align:left;
+    font-family:'Bebas Neue', 'Schibsted Grotesk', sans-serif;
+    font-size:22px; line-height:1.35; font-weight:400;
+    letter-spacing:0.02em;
+  }
+  .char{ display:inline-block; will-change:transform, opacity; }
+
+  /* pinned section */
+  .sticky-box{ will-change:transform; }
+
+  /* image reveal */
+  .reveal-wrap{ position:relative; overflow:hidden; }
+  .img-reveal{
+    clip-path: inset(0 0 100% 0);
+    will-change:clip-path;
+  }
+
+  /* magnetic */
+  .magnetic{ display:inline-flex; will-change:transform; }
+
+  /* header — plain nav, dark theme by default (page opens on a dark video hero) */
+  .site-header-new{
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:22px 40px;
+    gap:24px;
+    color:var(--fg);
+    transition:color .35s ease;
+  }
+  .site-header-new.is-light{ color:#0f0f0f; }
+
+  .logo-mark{
+    position:relative;
+    width:38px; height:38px;
+    font-size:14px; font-weight:700; letter-spacing:-0.01em;
+    white-space:nowrap; flex-shrink:0;
+    animation: spin-logo 6s linear infinite;
+  }
+  .logo-symbol{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    display:block;
+    opacity:1;
+    transition:opacity .35s ease;
+  }
+  .logo-symbol-black{ opacity:0; }
+  .site-header-new.is-light .logo-symbol-white{ opacity:0; }
+  .site-header-new.is-light .logo-symbol-black{ opacity:1; }
+  @keyframes spin-logo{
+    from{ transform: rotate(0deg); }
+    to{ transform: rotate(360deg); }
+  }
+  .simple-nav{ display:flex; align-items:center; gap:44px; }
+  .nav-link{
+    display:inline-flex; align-items:center;
+    text-decoration:none;
+    color:inherit;
+    font-size:17px; font-weight:600; letter-spacing:0.005em;
+    transition:opacity .25s ease;
+  }
+  .nav-link:hover{ opacity:0.6; }
+  .nav-link-mask{
+    display:block; overflow:hidden; height:22px;
+  }
+  .nav-link-inner{
+    display:flex; flex-direction:column;
+    will-change:transform;
+  }
+  .nav-link-line{
+    display:flex; align-items:center; gap:8px;
+    height:22px; line-height:22px;
+    white-space:nowrap;
+  }
+  .rec-dot{
+    width:9px; height:9px; border-radius:50%;
+    background:#ff3b30;
+    animation:rec-blink 1.4s ease-in-out infinite;
+  }
+  @keyframes rec-blink{ 50%{ opacity:.15; } }
+
+  /* burger menu (mobile only) */
+  .burger-btn{
+    display:none;
+    position:relative;
+    width:26px; height:18px;
+    background:none; border:none; padding:0;
+    cursor:pointer;
+    flex-shrink:0;
+    z-index:210;
+  }
+  .burger-btn span{
+    position:absolute; left:0; right:0;
+    height:2px; background:currentColor;
+    transition:transform 0.4s cubic-bezier(0.16,1,0.3,1), top 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease;
+  }
+  .burger-btn span:first-child{ top:0; }
+  .burger-btn span:last-child{ top:16px; }
+  .burger-btn.is-open span:first-child{ top:8px; transform:rotate(45deg); }
+  .burger-btn.is-open span:last-child{ top:8px; transform:rotate(-45deg); }
+
+  .mobile-nav{
+    position:fixed; inset:0; z-index:199;
+    display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
+    gap:22px;
+    padding:32px;
+    background:#0f0f0f;
+    opacity:0; visibility:hidden;
+    transform:translateY(-12px);
+    transition:opacity 0.4s ease, transform 0.4s ease, visibility 0s linear 0.4s;
+  }
+  .mobile-nav.is-open{
+    opacity:1; visibility:visible;
+    transform:translateY(0);
+    transition:opacity 0.4s ease, transform 0.4s ease, visibility 0s linear 0s;
+  }
+  .mobile-nav-link{
+    color:#fff; text-decoration:none;
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:clamp(2rem, 9vw, 2.8rem);
+    font-weight:700; letter-spacing:-0.02em;
+  }
+
+  /* scroll typewriter reveal */
+  .h-texts{ position:relative; background:#000000; color:var(--fg); }
+  .pin-height{ height:380vh; }
+  .pin-spacer-custom{
+    position:relative;
+    height:100vh; width:100%;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 4vw;
+  }
+  .h-texts-dots{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
+  .scroll-title{
+    font-size:clamp(3.2rem, 7.5vw, 7.5rem);
+    font-weight:700; line-height:0.98; letter-spacing:-0.04em;
+    max-width:1250px; margin:0 auto; text-align:left;
+  }
+  #typewriter-text{
+    position:relative;
+    z-index:1;
+    font-family:'Anton', 'Archivo Black', 'Schibsted Grotesk', sans-serif;
+    font-size:clamp(2.8rem, 7.2vw, 7.2rem);
+    font-weight:400; line-height:1.06; letter-spacing:-0.01em;
+    text-transform:uppercase;
+    text-align:center;
+    max-width:1250px;
+    background:#000000;
+    padding:2vh 3vw;
+  }
+  #typewriter-text .scroll-line{ display:block; }
+  .char-item{
+    color:#383838;
+    will-change:color;
+  }
+
+  /* work / case list */
+  .work-section{
+    position:relative; background:#000000; color:#ffffff;
+    padding:20px 4vw 100px;
+    overflow-x:hidden;
+  }
+  .work-heading{
+    font-family:'Anton', 'Schibsted Grotesk', sans-serif;
+    font-size:clamp(5.5rem, 15vw, 13rem);
+    font-weight:400; line-height:0.9; letter-spacing:-0.01em;
+    text-transform:uppercase;
+    text-align:center;
+    margin:0 0 40px;
+    will-change:transform, opacity;
+  }
+  .work-list{
+    margin-top:110px;
+    border-top:1px solid rgba(255,255,255,0.15);
+  }
+  .work-row{
+    position:relative;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 8px;
+    border-bottom:1px solid rgba(255,255,255,0.15);
+    text-decoration:none;
+    color:#ffffff;
+    transition:color 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+  }
+  .work-row::before{
+    content:'';
+    position:absolute;
+    top:0; bottom:0;
+    left:50%;
+    width:100vw;
+    margin-left:-50vw;
+    background:#ff3b30;
+    clip-path:circle(0% at var(--mx, 50%) var(--my, 50%));
+    transition:clip-path 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index:0;
+    pointer-events:none;
+  }
+  .work-row:hover{
+    color:#0f0f0f;
+  }
+  .work-row:hover::before{
+    clip-path:circle(150% at var(--mx, 50%) var(--my, 50%));
+  }
+  .work-name, .work-status{
+    position:relative;
+    z-index:1;
+  }
+  .work-name{
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:clamp(1rem, 1.5vw, 1.3rem);
+    font-weight:500;
+  }
+  .work-status{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.75rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    opacity:0.55;
+  }
+
+  /* scroll letter float-in reveal (second section) */
+  #float-text{ font-weight:500; }
+  .h-texts-2{ position:relative; background:#ffffff; color:#0f0f0f; }
+  .pin-height-2{ height:600vh; }
+  .pin-spacer-2{
+    height:100vh; width:100%;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 4vw;
+  }
+  .char-float{
+    display:inline-block;
+    will-change:transform, opacity;
+  }
+  .word-nowrap{
+    display:inline-block;
+    white-space:nowrap;
+  }
+  .arrow-float{
+    margin-left:0.15em;
+  }
+
+  /* about section */
+  .about-section{
+    position:relative; background:#000000; color:#ffffff;
+    display:flex; align-items:center; gap:80px;
+    padding:140px 6vw 240px;
+    flex-wrap:wrap;
+  }
+  .about-photo-wrap{
+    flex:0 0 auto;
+    width:min(360px, 40vw);
+    aspect-ratio:3/4;
+    border-radius:12px;
+    overflow:hidden;
+    background:#111;
+  }
+  .about-photo{
+    width:100%; height:100%;
+    object-fit:cover; display:block;
+    transform:scale(1.15);
+    will-change:transform;
+  }
+  .about-photo-wrap{
+    clip-path:inset(0 0 100% 0);
+  }
+  .about-copy{
+    flex:1 1 420px;
+    max-width:640px;
+  }
+  .about-copy p{
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:clamp(1rem, 1.4vw, 1.15rem);
+    line-height:1.6;
+    color:rgba(255,255,255,0.75);
+    margin:0 0 20px;
+  }
+  .about-copy .about-lead{
+    color:#ffffff;
+  }
+  .about-copy .about-name{
+    font-family:'Anton', 'Schibsted Grotesk', sans-serif;
+    font-size:clamp(2.2rem, 4.5vw, 3.4rem);
+    font-weight:400;
+    line-height:1;
+    color:#ffffff;
+    margin:0 0 24px;
+  }
+
+  /* footer */
+  .site-footer{
+    position:relative; background:#000000; color:#ffffff;
+    padding:70px 2vw 40px;
+    overflow:hidden;
+  }
+  .footer-cta-block{
+    padding:0 5vw;
+    margin-bottom:90px;
+  }
+  .footer-eyebrow{
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:clamp(1.1rem, 1.8vw, 1.4rem);
+    font-weight:500;
+    color:rgba(255,255,255,0.55);
+    margin:0 0 18px;
+  }
+  .footer-eyebrow em{
+    font-style:italic;
+    color:#ffffff;
+    font-family:'Schibsted Grotesk', sans-serif;
+  }
+  .footer-email{
+    display:inline-block;
+    font-family:'Anton', 'Schibsted Grotesk', sans-serif;
+    font-size:clamp(2.6rem, 8vw, 7.2rem);
+    font-weight:400; letter-spacing:-0.01em; line-height:1;
+    color:#ffffff;
+    text-decoration:none;
+    background-image:linear-gradient(#ff3b30, #ff3b30);
+    background-repeat:no-repeat;
+    background-size:0% 2px;
+    background-position:0 100%;
+    transition:color 0.4s ease, background-size 0.5s cubic-bezier(0.16,1,0.3,1);
+    padding-bottom:0.06em;
+    word-break:break-word;
+  }
+  .footer-email:hover{
+    color:#ff3b30;
+    background-size:100% 2px;
+  }
+
+  .footer-columns{
+    display:flex; flex-wrap:wrap; justify-content:space-between;
+    gap:60px;
+    padding:0 5vw;
+  }
+  .footer-col{
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .footer-col-social{
+    align-items:flex-start;
+  }
+  @media (min-width:900px){
+    .footer-col-social{ align-items:flex-end; text-align:right; }
+  }
+  .footer-col-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase;
+    color:rgba(255,255,255,0.4);
+    margin:0 0 4px;
+  }
+  .footer-col a, .footer-col span{
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:1rem;
+    color:rgba(255,255,255,0.75);
+    text-decoration:none;
+    transition:color 0.3s ease;
+  }
+  .footer-col a:hover{ color:#ff3b30; }
+
+  .footer-logo-wrap{
+    width:100%;
+    max-width:1500px;
+    margin:70px auto 30px;
+    line-height:0;
+    padding:0 5vw;
+  }
+  .footer-logo{
+    width:100%; height:auto; display:block;
+    max-height:none;
+  }
+
+  .footer-bottom{
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:24px;
+    padding:32px 5vw 0;
+    border-top:1px solid rgba(255,255,255,0.14);
+  }
+  .footer-copyright{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem; color:rgba(255,255,255,0.4);
+    margin:0;
+  }
+
+  @media (max-width:640px){
+    .footer-bottom{ flex-direction:column; align-items:flex-start; }
+  }
+
+  /* the process section */
+  .process-section{
+    position:relative; background:#000; color:var(--fg);
+    min-height:135vh;
+    padding:150px 40px 0;
+    display:flex; flex-direction:column; align-items:center;
+    text-align:center; overflow:hidden;
+  }
+  .process-globe{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    display:block;
+    pointer-events:none;
+  }
+  .process-globe-wrap{
+    position:absolute; left:50%; bottom:-6%;
+    transform:translateX(-50%);
+    width:min(1100px, 145vw);
+    aspect-ratio:1/1;
+    pointer-events:none;
+  }
+  .gw-pin{
+    position:absolute;
+    transform:translate(-50%,-50%) scale(0);
+    opacity:0;
+    display:flex; align-items:center; gap:8px;
+    white-space:nowrap;
+  }
+  .gw-pin-dot{
+    position:relative;
+    width:8px; height:8px; border-radius:50%;
+    background:var(--accent);
+    flex-shrink:0;
+  }
+  .gw-pin-dot::after{
+    content:'';
+    position:absolute; inset:-6px;
+    border:1px solid var(--accent);
+    border-radius:50%;
+    opacity:0.5;
+    animation:gw-ping 2s ease-out infinite;
+  }
+  .gw-pin-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; font-weight:500; letter-spacing:0.04em;
+    color:#fff;
+    text-shadow:0 1px 6px rgba(0,0,0,0.8);
+  }
+  @keyframes gw-ping{
+    0%{ transform:scale(0.6); opacity:0.6; }
+    100%{ transform:scale(1.8); opacity:0; }
+  }
+  .process-badge{
+    position:relative; z-index:2;
+    display:inline-flex; align-items:center; gap:9px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    padding:10px 20px; border-radius:999px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase;
+    margin-bottom:32px;
+    opacity:0;
+  }
+  .badge-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--accent);
+    animation:rec-blink 1.4s ease-in-out infinite;
+  }
+  .process-headline{
+    position:relative; z-index:2;
+    max-width:880px;
+    font-size:clamp(1.3rem, 2.3vw, 2rem);
+    font-weight:600; line-height:1.1; letter-spacing:-0.01em;
+  }
+  .process-line{
+    display:block; overflow:hidden;
+  }
+  .process-line .char{
+    display:inline-block; will-change:transform, opacity;
+  }
+  .process-muted{ color:var(--muted); font-weight:500; }
+
+  /* scroll-driven coverflow carousel (third section) */
+  .h-texts-3{ position:relative; background:#ffffff; color:#0f0f0f; overflow:hidden; }
+  .pin-height-3{ height:260vh; }
+  .pin-spacer-3{
+    height:100vh; width:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding-bottom:64px;
+    overflow:hidden;
+  }
+  .marquee-label{
+    font-size:12px; font-weight:500; letter-spacing:0.15em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:56px;
+  }
+  .coverflow{
+    position:relative;
+    width:100%; max-width:1300px; height:620px;
+    perspective:1900px;
+  }
+  .cf-card{
+    position:absolute; top:50%; left:50%;
+    width:380px; height:495px;
+    margin:-247px 0 0 -190px;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 16px 40px rgba(0,0,0,0.28);
+    will-change:transform;
+    transform-style:preserve-3d;
+    backface-visibility:hidden;
+  }
+  .cf-card img, .cf-card video{
+    width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;
+  }
+
+  /* FAQ */
+  .faq-section{
+    position:relative; background:#ffffff; color:#0f0f0f;
+    padding:40px 6vw 160px;
+  }
+  .faq-heading{
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:clamp(1.8rem, 3.4vw, 2.6rem);
+    font-weight:700; letter-spacing:-0.02em;
+    margin:0 0 40px;
+  }
+  .faq-list{
+    max-width:960px;
+    margin:0 auto;
+    border-top:1px solid rgba(15,15,15,0.12);
+  }
+  .faq-item{
+    position:relative;
+    overflow:hidden;
+  }
+  .faq-item::after{
+    content:'';
+    position:absolute; left:0; right:0; bottom:0;
+    height:1px;
+    background:rgba(15,15,15,0.12);
+    transform:scaleX(0);
+    transform-origin:left center;
+    transition:transform 0.7s cubic-bezier(0.16,1,0.3,1);
+  }
+  .faq-item.line-in::after{
+    transform:scaleX(1);
+  }
+  .faq-question{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:24px;
+    padding:28px 4px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    opacity:0;
+    transform:translateX(-36px);
+  }
+  .faq-q-text{
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:clamp(1.05rem, 1.6vw, 1.3rem);
+    font-weight:600; letter-spacing:-0.01em;
+    transition:opacity 0.25s ease;
+  }
+  .faq-question:hover .faq-q-text{
+    opacity:0.55;
+  }
+  .faq-toggle{
+    position:relative; flex:0 0 auto;
+    width:22px; height:22px;
+  }
+  .faq-toggle span{
+    position:absolute; left:50%; top:50%;
+    width:14px; height:2px;
+    background:#0f0f0f;
+    transform:translate(-50%,-50%);
+    transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .faq-toggle span:last-child{
+    transform:translate(-50%,-50%) rotate(90deg);
+  }
+  .faq-item.is-open .faq-toggle span:last-child{
+    transform:translate(-50%,-50%) rotate(0deg);
+  }
+  .faq-answer{
+    display:grid;
+    grid-template-rows:0fr;
+    transition:grid-template-rows 0.45s cubic-bezier(0.16,1,0.3,1);
+  }
+  .faq-item.is-open .faq-answer{
+    grid-template-rows:1fr;
+  }
+  .faq-answer > div{
+    overflow:hidden;
+  }
+  .faq-answer p{
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:clamp(0.95rem, 1.3vw, 1.05rem);
+    line-height:1.6;
+    color:rgba(15,15,15,0.62);
+    margin:0 0 28px;
+    max-width:760px;
+  }
+
+  /* project card */
+  .project-card{ will-change:transform; }
+
+  /* video cards flying along an S-curve path */
+  .path-cards-section{
+    position:relative; background:#000000; color:var(--fg);
+    overflow:hidden;
+    padding:190px 0 0;
+  }
+  .pc-heading{ text-align:center; }
+  .pc-stage{
+    position:relative;
+    width:100%; max-width:1500px;
+    aspect-ratio:1600/700;
+    margin:0 auto;
+  }
+  .pc-guide{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    overflow:visible;
+  }
+  .pc-card{
+    position:absolute; top:0; left:0;
+    width:230px; height:150px;
+    margin:-75px 0 0 -115px;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,0.55);
+    will-change:transform, opacity;
+    cursor:none;
+  }
+  .pc-card video{
+    width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;
+  }
+
+  /* video cards on a diagonal staircase guide — grow larger as they descend the path */
+  .diag-cards-section{
+    position:relative; background:#000000; color:var(--fg);
+    overflow:hidden;
+    padding:130px 0 100px;
+  }
+  .dc-stage{
+    position:relative;
+    width:100%; max-width:1500px;
+    aspect-ratio:1600/900;
+    margin:0 auto;
+  }
+  .dc-card{
+    position:absolute; top:0; left:0;
+    width:220px; height:130px;
+    margin:-65px 0 0 -110px;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,0.55);
+    will-change:transform, opacity;
+    cursor:none;
+    transform-origin:50% 50%;
+  }
+  .dc-card video{
+    width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;
+  }
+
+  /* ===== Preloader — viewfinder / reticle intro ===== */
+  #preloader{
+    position:fixed; inset:0; z-index:10000;
+    overflow:hidden;
+    background:linear-gradient(150deg, #0e1319 0%, #232d36 32%, #57646e 68%, #a9b2b8 100%);
+  }
+  .pl-sweep{
+    position:absolute; top:-30%; left:-20%;
+    width:1px; height:160%;
+    background:rgba(255,255,255,0.45);
+    transform:rotate(18deg);
+    animation:pl-sweep-move 2.4s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes pl-sweep-move{
+    0%{ left:-20%; opacity:0; }
+    12%{ opacity:0.7; }
+    88%{ opacity:0.7; }
+    100%{ left:115%; opacity:0; }
+  }
+  #preloader .pl-cross-v, #preloader .pl-cross-h{
+    position:absolute; background:rgba(255,255,255,0.14);
+  }
+  #preloader .pl-cross-v{ top:0; bottom:0; left:50%; width:1px; }
+  #preloader .pl-cross-h{ left:0; right:0; top:50%; height:1px; }
+  #preloader .pl-reticle{
+    position:absolute; top:50%; left:50%;
+    width:26px; height:26px;
+    transform:translate(-50%,-50%);
+  }
+  #preloader .pl-reticle::before, #preloader .pl-reticle::after{
+    content:''; position:absolute; background:rgba(255,255,255,0.65);
+  }
+  #preloader .pl-reticle::before{ top:50%; left:0; right:0; height:1px; transform:translateY(-50%); }
+  #preloader .pl-reticle::after{ left:50%; top:0; bottom:0; width:1px; transform:translateX(-50%); }
+  #preloader .pl-reticle-dot{
+    position:absolute; top:50%; left:50%; width:4px; height:4px;
+    background:var(--accent); transform:translate(-50%,-50%);
+  }
+
+  #preloader .pl-corner{
+    position:absolute; width:22px; height:22px;
+    border:1px solid rgba(255,255,255,0.4);
+  }
+  #preloader .pl-tl{ top:28px; left:32px; border-right:none; border-bottom:none; }
+  #preloader .pl-tr{ top:28px; right:32px; border-left:none; border-bottom:none; }
+  #preloader .pl-bl{ bottom:28px; left:32px; border-right:none; border-top:none; }
+  #preloader .pl-br{ bottom:28px; right:32px; border-left:none; border-top:none; }
+
+  #preloader .pl-counter{
+    position:absolute; right:80px; bottom:70px;
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-weight:300; letter-spacing:-0.02em;
+    font-size:clamp(6rem, 15.5vw, 13rem);
+    color:#fff; line-height:1;
+  }
+  #preloader .pl-counter span{ font-size:0.3em; vertical-align:top; }
+
+  .pl-wipe{
+    position:fixed; inset:0; z-index:10001;
+    display:flex;
+    pointer-events:none;
+  }
+  .pl-panel{
+    flex:1; background:#0f0f0f;
+  }
+
+  /* ========================================================================
+     Mobile adaptation — layout, typography, scroll length & touch behavior
+     ======================================================================== */
+
+  /* kill the desktop custom cursor on touch/coarse-pointer devices */
+  @media (hover:none), (pointer:coarse){
+    *{ cursor:auto !important; }
+    #cursor{ display:none !important; }
+  }
+
+  @media (max-width:900px){
+    /* header */
+    .site-header-new{ padding:16px 20px; }
+    .logo-mark{ width:32px; height:32px; }
+    .simple-nav .nav-link{ display:none; }
+    .simple-nav{ gap:16px; }
+    .burger-btn{ display:block; }
+
+    /* hero — stack headline above tagline, both left-aligned, full width */
+    .hero-headline{
+      left:20px; right:20px; bottom:132px;
+      max-width:none;
+      font-size:clamp(1.9rem, 8vw, 2.8rem);
+    }
+    .hero-tagline{
+      left:20px; right:20px; bottom:28px;
+      max-width:none;
+      font-size:16px; line-height:1.4;
+    }
+
+    /* typewriter / "New Reveal" section — shorter scroll runway on mobile */
+    .pin-height{ height:220vh; }
+    #typewriter-text{ font-size:clamp(2.1rem, 11vw, 3.6rem); padding:2.5vh 5vw; }
+    .footer-cta-block, .about-section, .footer-columns{ }
+
+    /* work section */
+    .work-section{ padding:20px 5vw 70px; }
+    .work-heading{ font-size:clamp(3.6rem, 22vw, 6rem); margin-bottom:24px; }
+    .work-list{ margin-top:60px; }
+    .work-row{ padding:16px 4px; }
+    .work-name{ font-size:1rem; }
+
+    /* "Let's shoot something worth watching" float-in section */
+    .pin-height-2{ height:320vh; }
+
+    /* about */
+    .about-section{
+      padding:90px 6vw 120px;
+      gap:36px;
+    }
+    .about-photo-wrap{ width:min(320px, 60vw); }
+
+    /* footer */
+    .site-footer{ padding:50px 2vw 32px; }
+    .footer-cta-block{ margin-bottom:56px; }
+    .footer-email{ font-size:clamp(2rem, 10vw, 3.2rem); }
+    .footer-logo-wrap{ margin:44px auto 20px; }
+
+    /* the process section */
+    .process-section{ padding:100px 20px 0; min-height:calc(154vw + 260px); }
+    .process-headline{ font-size:clamp(1.15rem, 4.8vw, 1.6rem); }
+
+    /* coverflow carousel — shorter runway + smaller cards so they fit the screen */
+    .pin-height-3{ height:200vh; }
+    .cf-card{
+      width:min(72vw, 300px); height:min(94vw, 390px);
+      margin-top:calc(min(94vw, 390px) / -2);
+      margin-left:calc(min(72vw, 300px) / -2);
+    }
+
+    /* FAQ */
+    .faq-section{ padding:30px 5vw 90px; }
+    .faq-heading{ font-size:clamp(1.5rem, 6vw, 2rem); margin-bottom:24px; }
+    .faq-question{ padding:22px 2px; gap:14px; }
+
+    /* S-curve + staircase video-card rails — smaller cards, less top padding */
+    .path-cards-section{ padding:130px 0 0; }
+    .pc-card{
+      width:150px; height:98px;
+      margin:-49px 0 0 -75px;
+    }
+    .diag-cards-section{ padding:90px 0 70px; }
+    .dc-card{
+      width:140px; height:82px;
+      margin:-41px 0 0 -70px;
+    }
+  }
+
+  @media (max-width:480px){
+    .hero-headline{ bottom:150px; font-size:clamp(1.7rem, 9.5vw, 2.3rem); }
+    .hero-tagline{ font-size:14.5px; }
+    .work-heading{ font-size:clamp(3rem, 20vw, 4.4rem); }
+    .footer-email{ font-size:clamp(1.6rem, 9.5vw, 2.4rem); }
+    .cf-card{ width:66vw; height:86vw; margin-top:calc(86vw / -2); margin-left:calc(66vw / -2); }
+  }
+</style>
+</head>
+<body class="antialiased">
+
+<!-- Preloader: camera aperture intro -->
+<div id="preloader">
+  <div class="pl-cross-v"></div>
+  <div class="pl-cross-h"></div>
+  <div class="pl-reticle"><span class="pl-reticle-dot"></span></div>
+
+  <span class="pl-corner pl-tl"></span>
+  <span class="pl-corner pl-tr"></span>
+  <span class="pl-corner pl-bl"></span>
+  <span class="pl-corner pl-br"></span>
+
+  <div class="pl-sweep"></div>
+
+  <div class="pl-counter"><span id="plCounter">00</span><span>%</span></div>
+</div>
+
+<div class="pl-wipe" id="plWipe"></div>
+
+<div id="cursor"></div>
+
+<!-- Header -->
+<header class="site-header-new">
+  <div class="logo-mark">
+    <img class="logo-symbol logo-symbol-white" src="symbol_white.png" alt="logo">
+    <img class="logo-symbol logo-symbol-black" src="symbol_black.png" alt="logo">
+  </div>
+
+  <nav class="simple-nav">
+    <a href="#about" class="nav-link">
+      <span class="nav-link-mask"><span class="nav-link-inner">
+        <span class="nav-link-line">About</span>
+        <span class="nav-link-line" aria-hidden="true">About</span>
+      </span></span>
+    </a>
+    <a href="#" class="nav-link">
+      <span class="nav-link-mask"><span class="nav-link-inner">
+        <span class="nav-link-line">Pricing</span>
+        <span class="nav-link-line" aria-hidden="true">Pricing</span>
+      </span></span>
+    </a>
+    <a href="mailto:mateuszgrs96@gmail.com" class="nav-link">
+      <span class="nav-link-mask"><span class="nav-link-inner">
+        <span class="nav-link-line">Contact</span>
+        <span class="nav-link-line" aria-hidden="true">Contact</span>
+      </span></span>
+    </a>
+    <span class="rec-dot"></span>
+  </nav>
+
+  <button class="burger-btn" id="burgerBtn" aria-label="Toggle menu">
+    <span></span><span></span>
+  </button>
+</header>
+
+<div class="mobile-nav" id="mobileNav">
+  <a href="#about" class="mobile-nav-link">About</a>
+  <a href="#" class="mobile-nav-link">Pricing</a>
+  <a href="mailto:mateuszgrs96@gmail.com" class="mobile-nav-link">Contact</a>
+</div>
+
+<!-- Hero -->
+<section class="hero">
+  <video class="hero-video" src="video_hurski_website.mp4" autoplay muted loop playsinline></video>
+  <div class="hero-scrim"></div>
+  <canvas class="hero-dots" id="heroDots"></canvas>
+  <h1 class="hero-headline">
+    <span class="headline-line" id="headlineLine1">The reveal</span>
+    <span class="headline-line" id="headlineLine2">is the sell</span>
+  </h1>
+  <div class="hero-tagline">
+    <p>We shoot, edit &amp; build digital presence for wrap, PPF and detailing studios — content that turns views into bookings</p>
+  </div>
+</section>
+
+<!-- Video cards flying along an S-curve path, scroll-driven -->
+<section class="path-cards-section">
+  <div class="pc-stage" id="pcStage">
+    <svg class="pc-guide" viewBox="0 0 1600 700" preserveAspectRatio="none">
+      <path id="pcPath" d="M -100,180 C 250,40 550,40 800,180 C 1050,320 1250,320 1500,180 C 1600,120 1650,140 1700,160"
+            fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+    </svg>
+  </div>
+</section>
+
+<!-- Scroll Typewriter Reveal -->
+<section class="h-texts">
+  <div class="pin-height">
+    <div class="pin-spacer-custom">
+      <canvas class="h-texts-dots" id="hTextsDots"></canvas>
+      <h2 class="scroll-title" id="typewriter-text"><span class="scroll-line">New Reveal</span><span class="scroll-line">New Story</span><span class="scroll-line">Every Shoot</span></h2>
+    </div>
+  </div>
+</section>
+
+<!-- About -->
+<section class="about-section" id="about-section">
+  <div class="about-photo-wrap">
+    <img class="about-photo" src="photo_me.PNG" alt="Matt">
+  </div>
+  <div class="about-copy">
+    <p class="about-name">I'm Matt.</p>
+    <p class="about-lead">I shoot and edit content for wrap, PPF and detailing shops — the kind of videos that make people stop scrolling and actually book a visit.</p>
+    <p>I come to your shop, film the process and the reveal properly, and edit it into something that looks like your actual skill level, not a rushed clip.</p>
+    <p>5+ years in visual design, art direction, and photography. Degree in Visual Communication with honors, background in video production — so filming, editing, and your website if you need one, come from one person with one consistent style, not five different freelancers.</p>
+  </div>
+</section>
+
+<!-- Work / Case list -->
+<section class="work-section">
+  <h2 class="work-heading">Work</h2>
+  <div class="work-list">
+    <a class="work-row" href="#">
+      <span class="work-name">Case One</span>
+      <span class="work-status">Soon</span>
+    </a>
+    <a class="work-row" href="#">
+      <span class="work-name">Case Two</span>
+      <span class="work-status">Soon</span>
+    </a>
+    <a class="work-row" href="#">
+      <span class="work-name">Case Three</span>
+      <span class="work-status">Soon</span>
+    </a>
+    <a class="work-row" href="#">
+      <span class="work-name">Case Four</span>
+      <span class="work-status">Soon</span>
+    </a>
+    <a class="work-row" href="#">
+      <span class="work-name">Case Five</span>
+      <span class="work-status">Soon</span>
+    </a>
+  </div>
+</section>
+
+<!-- The Process -->
+<section class="process-section">
+  <div class="process-badge"><span class="badge-dot"></span>The Process</div>
+  <h2 class="process-headline">
+    <span class="process-line">A workflow that turns your daily work</span>
+    <span class="process-line">into content that actually sells the craft —</span>
+    <span class="process-line process-muted">shot, edited, and delivered fast</span>
+  </h2>
+  <div class="process-globe-wrap">
+    <video class="process-globe" src="world_animation.mp4" autoplay muted loop playsinline></video>
+
+    <div class="gw-pin gw-pin-video" style="left:38%; top:33%;">
+      <span class="gw-pin-dot"></span><span class="gw-pin-label">Toronto</span>
+    </div>
+    <div class="gw-pin gw-pin-video" style="left:44%; top:38%;">
+      <span class="gw-pin-dot"></span><span class="gw-pin-label">Hamilton</span>
+    </div>
+    <div class="gw-pin gw-pin-video" style="left:34%; top:41%;">
+      <span class="gw-pin-dot"></span><span class="gw-pin-label">Buffalo</span>
+    </div>
+    <div class="gw-pin gw-pin-video" style="left:48%; top:46%;">
+      <span class="gw-pin-dot"></span><span class="gw-pin-label">New York</span>
+    </div>
+  </div>
+</section>
+
+<!-- Scroll Letter Float-In Reveal -->
+<section class="h-texts-2">
+  <div class="pin-height-2">
+    <div class="pin-spacer-2">
+      <h2 class="scroll-title" id="float-text">
+        Let's shoot something worth watching
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- Scroll-driven Coverflow Carousel -->
+<section class="h-texts-3">
+  <div class="pin-height-3">
+    <div class="pin-spacer-3">
+      <div class="coverflow" id="coverflow"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faqSection">
+  <h2 class="faq-heading">Frequently asked</h2>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-question">
+        <span class="faq-q-text">How long does a shoot day take?</span>
+        <span class="faq-toggle"><span></span><span></span></span>
+      </div>
+      <div class="faq-answer"><div><p>Most shoots run 2–4 hours on site, depending on how many vehicles or angles we're covering. We work around your shop hours so it doesn't get in the way of business.</p></div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question">
+        <span class="faq-q-text">What do you need from us before filming?</span>
+        <span class="faq-toggle"><span></span><span></span></span>
+      </div>
+      <div class="faq-answer"><div><p>Just a vehicle mid-process — wrap, PPF or detail — and access to the bay. We handle lighting, angles and direction. No prep decks or scripts needed on your end.</p></div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question">
+        <span class="faq-q-text">How fast do we get the final edit?</span>
+        <span class="faq-toggle"><span></span><span></span></span>
+      </div>
+      <div class="faq-answer"><div><p>Turnaround is typically 3–5 business days for a full edit, with raw select clips available sooner if you need something to post right away.</p></div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question">
+        <span class="faq-q-text">Do you handle posting and captions too?</span>
+        <span class="faq-toggle"><span></span><span></span></span>
+      </div>
+      <div class="faq-answer"><div><p>We can — some clients just want the files, others want us to manage the page end to end: posting schedule, captions, and format for each platform.</p></div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question">
+        <span class="faq-q-text">Can we book recurring shoots?</span>
+        <span class="faq-toggle"><span></span><span></span></span>
+      </div>
+      <div class="faq-answer"><div><p>Yes — most shops book us weekly or biweekly so there's always fresh content in the pipeline instead of scrambling before a slow week.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Video cards on a diagonal "staircase" guide, growing larger as they descend -->
+<section class="diag-cards-section">
+  <div class="dc-stage" id="dcStage">
+    <svg class="pc-guide" viewBox="0 0 1600 900" preserveAspectRatio="none">
+      <path id="dcPath" d="M -80,60 C 260,40 420,90 620,180 C 860,290 980,340 1180,460 C 1400,590 1520,650 1700,760"
+            fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+    </svg>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer id="about" class="site-footer">
+  <div class="footer-cta-block">
+    <p class="footer-eyebrow">Got a shop? <em>Let's talk.</em></p>
+    <a class="footer-email" href="mailto:UXHURSKI@GMAIL.COM">UXHURSKI@GMAIL.COM</a>
+  </div>
+
+  <div class="footer-columns">
+    <div class="footer-col">
+      <p class="footer-col-label">Navigation</p>
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Work</a>
+      <a href="#">Pricing</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-label">Info</p>
+      <span>Based in the GTA</span>
+    </div>
+    <div class="footer-col footer-col-social">
+      <p class="footer-col-label">Follow</p>
+      <a href="https://instagram.com/hurski" target="_blank" rel="noopener">Instagram</a>
+      <a href="#" target="_blank" rel="noopener">TikTok</a>
+      <a href="#" target="_blank" rel="noopener">YouTube</a>
+    </div>
+  </div>
+
+  <div class="footer-logo-wrap">
+    <svg class="footer-logo" viewBox="0 0 1122 959" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M103.099 952.772V516.863H71.5969V952.772H0V6.22656H71.5969V398.545H103.099V6.22656H174.696V952.772H103.099Z" fill="#FF3B30"/>
+      <path d="M210.695 625.841V3.11328H281.576V563.568C281.576 815.15 286.588 853.759 297.328 853.759C308.067 853.759 313.079 815.15 313.079 563.568V3.11328H383.96V625.841C383.96 891.122 358.901 955.886 297.328 955.886C235.754 955.886 210.695 891.122 210.695 625.841Z" fill="#FF3B30"/>
+      <path d="M419.961 6.22656H480.102C561.007 6.22656 593.941 79.7084 593.941 270.263C593.941 371.145 581.77 429.681 558.143 467.045L593.941 952.772H525.924L499.433 520.599C496.57 520.599 493.706 520.599 490.842 521.845V952.772H419.961V6.22656ZM522.344 270.263C522.344 136.999 511.605 118.318 490.842 118.318V422.208C512.321 422.208 522.344 401.036 522.344 270.263Z" fill="#FF3B30"/>
+      <path d="M709.414 0C757.384 0 790.318 47.3272 790.318 230.409V315.1H725.881V236.636C725.881 139.491 720.153 102.127 710.846 102.127C703.686 102.127 697.958 128.282 697.958 166.891C697.958 389.827 791.75 546.755 791.75 783.391C791.75 876.8 766.691 959 712.278 959C664.308 959 631.373 911.673 631.373 728.591V656.355H695.811V722.364C695.811 819.509 701.538 856.873 710.846 856.873C720.153 856.873 723.733 823.245 723.733 789.618C723.733 585.364 629.941 432.173 629.941 173.118C629.941 74.7273 662.16 0 709.414 0Z" fill="#FF3B30"/>
+      <path d="M827.75 952.772V6.22656H899.347V439.645L945.169 6.22656H1009.61L961.636 442.136L1013.19 952.772H945.169L899.347 477.008V952.772H827.75Z" fill="#FF3B30"/>
+      <path d="M1121.5 952.772H1049.19V6.22656H1121.5V952.772Z" fill="#FF3B30"/>
+    </svg>
+  </div>
+
+  <div class="footer-bottom">
+    <p class="footer-copyright">&copy; 2026 Hurski. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* ---------- 1. Lenis smooth scroll <-> ScrollTrigger ---------- */
+const lenis = new Lenis({
+  duration: 1.2,
+  easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  smoothWheel: true
+});
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add(time => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+lenis.stop();
+
+/* ---------- 2. Hero: split-text char stagger ---------- */
+function splitChars(el){
+  const text = el.textContent;
+  el.textContent = '';
+  [...text].forEach(ch => {
+    const span = document.createElement('span');
+    span.className = 'char';
+    span.textContent = ch === ' ' ? ' ' : ch;
+    el.appendChild(span);
+  });
+  return el.querySelectorAll('.char');
+}
+const heroChars = [
+  ...splitChars(document.getElementById('headlineLine1')),
+  ...splitChars(document.getElementById('headlineLine2'))
+];
+
+const heroTl = gsap.timeline({ paused: true });
+heroTl.from('.hero-video', {
+  scale: 1.15,
+  duration: 1.6,
+  ease: 'power3.out'
+}).from(heroChars, {
+  yPercent: 120,
+  opacity: 0,
+  rotate: 6,
+  duration: 1,
+  ease: 'power4.out',
+  stagger: 0.02
+}, '-=1.1').from('.hero-tagline p', {
+  y: 20,
+  opacity: 0,
+  duration: 0.8,
+  ease: 'power3.out'
+}, '-=0.5');
+
+/* ---------- 2b. Dot-matrix overlay — a live grid that ripples around the cursor ---------- */
+function initDotMatrix(sectionEl, canvas) {
+  const ctx = canvas.getContext('2d');
+
+  const GAP = 26;       // spacing between dots
+  const RADIUS = 160;   // how far the cursor's influence reaches
+  const BASE_R = 1.4;   // resting dot radius
+  const MAX_R = 4.2;    // dot radius at the cursor's center
+  const PUSH = 14;      // how far dots get pushed away from the cursor
+
+  let w = 0, h = 0, dots = [];
+  let mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999 };
+
+  function resize() {
+    const rect = sectionEl.getBoundingClientRect();
+    w = canvas.width = rect.width * devicePixelRatio;
+    h = canvas.height = rect.height * devicePixelRatio;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+
+    dots = [];
+    const cols = Math.ceil(rect.width / GAP) + 1;
+    const rows = Math.ceil(rect.height / GAP) + 1;
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        dots.push({ x: i * GAP, y: j * GAP, ox: i * GAP, oy: j * GAP });
+      }
+    }
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  sectionEl.addEventListener('mousemove', e => {
+    const rect = sectionEl.getBoundingClientRect();
+    mouse.tx = e.clientX - rect.left;
+    mouse.ty = e.clientY - rect.top;
+  });
+  sectionEl.addEventListener('mouseleave', () => {
+    mouse.tx = -9999; mouse.ty = -9999;
+  });
+
+  function tick() {
+    // smooth-follow so the ripple itself feels alive, not just snapped to the cursor
+    mouse.x += (mouse.tx - mouse.x) * 0.12;
+    mouse.y += (mouse.ty - mouse.y) * 0.12;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+
+    for (let i = 0; i < dots.length; i++) {
+      const d = dots[i];
+      const dx = d.ox - mouse.x, dy = d.oy - mouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const t = Math.max(0, 1 - dist / RADIUS);
+
+      const angle = Math.atan2(dy, dx);
+      const targetX = d.ox + Math.cos(angle) * PUSH * t;
+      const targetY = d.oy + Math.sin(angle) * PUSH * t;
+      d.x += (targetX - d.x) * 0.18;
+      d.y += (targetY - d.y) * 0.18;
+
+      const r = BASE_R + (MAX_R - BASE_R) * t;
+      if (r <= 0.05) continue;
+
+      ctx.globalAlpha = 0.25 + t * 0.75;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    requestAnimationFrame(tick);
+  }
+  tick();
+}
+initDotMatrix(document.querySelector('.hero'), document.getElementById('heroDots'));
+initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementById('hTextsDots'));
+
+/* ---------- 1b. Preloader: viewfinder intro + panel wipe reveal ---------- */
+(() => {
+  const preloader = document.getElementById('preloader');
+  const wipe = document.getElementById('plWipe');
+  const counterEl = document.getElementById('plCounter');
+
+  document.documentElement.style.overflow = 'hidden';
+
+  /* build wipe panels */
+  const N = 6;
+  const panels = [];
+  for (let i = 0; i < N; i++) {
+    const panel = document.createElement('div');
+    panel.className = 'pl-panel';
+    gsap.set(panel, { scaleY: 0, transformOrigin: 'bottom center' });
+    wipe.appendChild(panel);
+    panels.push(panel);
+  }
+
+  const introTl = gsap.timeline({
+    onComplete: () => {
+      document.documentElement.style.overflow = '';
+      wipe.remove();
+      lenis.start();
+      heroTl.play();
+    }
+  });
+  window.__introTl = introTl;
+
+  /* counter 0 -> 100 */
+  const counterObj = { v: 0 };
+  introTl.to(counterObj, {
+    v: 100,
+    duration: 1.5,
+    ease: 'power2.inOut',
+    onUpdate: () => { counterEl.textContent = String(Math.round(counterObj.v)).padStart(2, '0'); }
+  });
+
+  /* curtain closes over the viewfinder, left to right */
+  introTl.to(panels, {
+    scaleY: 1,
+    duration: 0.55,
+    ease: 'power4.inOut',
+    stagger: 0.05
+  }, '-=0.1');
+
+  /* swap: preloader is now fully hidden behind the solid curtain */
+  introTl.call(() => { preloader.style.display = 'none'; });
+  introTl.set(panels, { transformOrigin: 'top center' });
+
+  /* curtain lifts away, revealing the hero underneath, right to left */
+  introTl.to(panels, {
+    scaleY: 0,
+    duration: 0.7,
+    ease: 'power4.inOut',
+    stagger: 0.05
+  }, '+=0.1');
+})();
+
+/* ---------- 2c. Header theme: dark by default (video hero), light over the white sections ---------- */
+ScrollTrigger.create({
+  trigger: '.h-texts-2',
+  start: 'top top',
+  endTrigger: '.faq-section',
+  end: 'bottom top',
+  onEnter: () => document.querySelector('.site-header-new').classList.add('is-light'),
+  onLeave: () => document.querySelector('.site-header-new').classList.remove('is-light'),
+  onEnterBack: () => document.querySelector('.site-header-new').classList.add('is-light'),
+  onLeaveBack: () => document.querySelector('.site-header-new').classList.remove('is-light')
+});
+
+/* ---------- 4. Clip-path image reveal ---------- */
+gsap.utils.toArray('.img-reveal').forEach(img => {
+  gsap.to(img, {
+    clipPath: 'inset(0 0 0% 0)',
+    duration: 1.2,
+    ease: 'power3.inOut',
+    scrollTrigger: {
+      trigger: img,
+      start: 'top 85%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+});
+
+/* ---------- 4a1. Scroll typewriter reveal (color wipe, typing feel) ---------- */
+(() => {
+  const title = document.getElementById('typewriter-text');
+  const lines = title.querySelectorAll('.scroll-line');
+  lines.forEach(line => {
+    const text = line.textContent;
+    line.innerHTML = text
+      .split('')
+      .map(char => `<span class="char-item">${char === ' ' ? '&nbsp;' : char}</span>`)
+      .join('');
+  });
+
+  const chars = title.querySelectorAll('.char-item');
+
+  gsap.timeline({
+    scrollTrigger: {
+      trigger: '.pin-height',
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.3,
+      pin: '.pin-spacer-custom',
+      anticipatePin: 1
+    }
+  }).to(chars, {
+    color: '#ffffff',
+    stagger: { each: 0.05, from: 'start' },
+    ease: 'power1.inOut'
+  });
+})();
+
+/* ---------- 4a2. Scroll letter float-in reveal (left to right, alive feel) ---------- */
+(() => {
+  const title = document.getElementById('float-text');
+  const text = title.innerText.trim();
+  const words = text.split(' ');
+
+  title.innerHTML = words
+    .map(word => {
+      const chars = word.split('').map(ch => `<span class="char-float">${ch}</span>`).join('');
+      return `<span class="word-nowrap">${chars}</span>`;
+    })
+    .join(' ');
+
+  const chars = title.querySelectorAll('.char-float');
+
+  gsap.timeline({
+    scrollTrigger: {
+      trigger: '.pin-height-2',
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.3,
+      pin: '.pin-spacer-2',
+      anticipatePin: 1
+    }
+  }).fromTo(chars,
+    { opacity: 0, y: '0.4em', rotate: 6 },
+    {
+      opacity: 1,
+      y: '0em',
+      rotate: 0,
+      stagger: { each: 0.05, from: 'start' },
+      ease: 'power2.out'
+    }
+  );
+})();
+
+/* ---------- 4b. The Process: badge + typewriter headline reveal, plays once on scroll in ---------- */
+(() => {
+  const section = document.querySelector('.process-section');
+  const lineEls = section.querySelectorAll('.process-line');
+  gsap.set('.process-badge', { y: 14 });
+
+  const allChars = [];
+  lineEls.forEach(line => {
+    const text = line.textContent;
+    line.textContent = '';
+    text.split(' ').forEach((word, wi, arr) => {
+      const wordSpan = document.createElement('span');
+      wordSpan.className = 'word-nowrap';
+      [...word].forEach(ch => {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = ch;
+        wordSpan.appendChild(span);
+        allChars.push(span);
+      });
+      line.appendChild(wordSpan);
+      if (wi < arr.length - 1) {
+        const spaceSpan = document.createElement('span');
+        spaceSpan.className = 'char';
+        spaceSpan.textContent = ' ';
+        line.appendChild(spaceSpan);
+        allChars.push(spaceSpan);
+      }
+    });
+  });
+
+  gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: 'top 75%',
+      toggleActions: 'play none none none'
+    }
+  })
+  .to('.process-badge', {
+    opacity: 1,
+    y: 0,
+    duration: 0.6,
+    ease: 'power3.out'
+  })
+  .from(allChars, {
+    opacity: 0,
+    y: 10,
+    duration: 0.5,
+    ease: 'power2.out',
+    stagger: 0.012
+  }, '-=0.3');
+})();
+
+/* ---------- 4a3. About photo: clip-path wipe reveal + slow zoom-out on scroll in ---------- */
+gsap.timeline({
+  scrollTrigger: {
+    trigger: '.about-section',
+    start: 'top 80%',
+    toggleActions: 'play none none none'
+  }
+})
+.to('.about-photo-wrap', {
+  clipPath: 'inset(0 0 0% 0)',
+  duration: 1.1,
+  ease: 'power3.inOut'
+})
+.to('.about-photo', {
+  scale: 1,
+  duration: 1.4,
+  ease: 'power2.out'
+}, '-=0.9')
+.from('.about-copy', {
+  opacity: 0,
+  y: 24,
+  duration: 0.8,
+  ease: 'power2.out'
+}, '-=1');
+
+/* ---------- 4b1. City labels fade in smoothly over the globe video ---------- */
+(() => {
+  const videoPins = document.querySelectorAll('.gw-pin-video');
+
+  gsap.timeline({
+    scrollTrigger: {
+      trigger: '.process-globe-wrap',
+      start: 'top 70%',
+      toggleActions: 'play none none none'
+    }
+  }).to(videoPins, {
+    opacity: 1,
+    scale: 1,
+    duration: 0.8,
+    ease: 'power2.out',
+    stagger: 0.25
+  });
+})();
+
+/* ---------- 4b2. Work list rows: hover reveal expands from the cursor's entry point ---------- */
+(() => {
+  document.querySelectorAll('.work-row').forEach(row => {
+    const setPos = e => {
+      const rect = row.getBoundingClientRect();
+      const mx = ((e.clientX - rect.left) / rect.width) * 100;
+      const my = ((e.clientY - rect.top) / rect.height) * 100;
+      row.style.setProperty('--mx', mx + '%');
+      row.style.setProperty('--my', my + '%');
+    };
+    row.addEventListener('mouseenter', setPos);
+    row.addEventListener('mouseleave', setPos);
+  });
+})();
+
+/* ---------- 4c. WORK heading eases in already big, then grows a touch more as it scrolls ---------- */
+gsap.fromTo('.work-heading',
+  { scale: 0.85, opacity: 0 },
+  {
+    scale: 1.25,
+    opacity: 1,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '.work-section',
+      start: 'top 90%',
+      end: 'top 20%',
+      scrub: true
+    }
+  }
+);
+
+/* ---------- 4c1. FAQ accordion + left-to-right reveal on scroll ---------- */
+(() => {
+  const items = document.querySelectorAll('.faq-item');
+
+  items.forEach((item, i) => {
+    ScrollTrigger.create({
+      trigger: item,
+      start: 'top 88%',
+      once: true,
+      onEnter: () => {
+        gsap.delayedCall(i * 0.07, () => {
+          item.classList.add('line-in');
+          gsap.to(item.querySelector('.faq-question'), {
+            opacity: 1,
+            x: 0,
+            duration: 0.65,
+            ease: 'power3.out'
+          });
+        });
+      }
+    });
+
+    const isTouchNow = () => window.matchMedia('(hover:none), (pointer:coarse)').matches;
+
+    item.querySelector('.faq-question').addEventListener('click', () => {
+      if (!isTouchNow()) return; // desktop/mouse users get hover instead
+      items.forEach(other => { if (other !== item) other.classList.remove('is-open'); });
+      item.classList.toggle('is-open');
+    });
+    item.addEventListener('mouseenter', () => {
+      if (isTouchNow()) return;
+      item.classList.add('is-open');
+    });
+    item.addEventListener('mouseleave', () => {
+      if (isTouchNow()) return;
+      item.classList.remove('is-open');
+    });
+  });
+})();
+
+/* ---------- 4d. Scroll-driven coverflow carousel (3D, hover to enlarge) ---------- */
+(() => {
+  const stage = document.getElementById('coverflow');
+  const videos = [
+    'materials_video/IMG_6559.MP4',
+    'materials_video/IMG_6561.MP4',
+    'materials_video/IMG_6562.MP4',
+    'materials_video/IMG_6563.MP4',
+    'materials_video/IMG_6564.MP4',
+    'materials_video/IMG_6571.MP4'
+  ];
+
+  stage.innerHTML = videos.map(src =>
+    `<div class="cf-card"><video src="${src}" autoplay muted loop playsinline preload="auto"></video></div>`
+  ).join('');
+  const cards = gsap.utils.toArray(stage.querySelectorAll('.cf-card'));
+  cards.forEach(card => {
+    const v = card.querySelector('video');
+    v.play().catch(() => {});
+  });
+  const N = cards.length;
+  const anglePerCard = 22;  // deg — how tightly the deck bows around the arc
+  const radius = 720;       // px — how deep the arc bows away from the viewer
+
+  const scaleTo = cards.map(card => gsap.quickTo(card, 'scale', { duration: 0.25, ease: 'power3.out' }));
+
+  // wraps any distance (however large) into the shortest signed offset
+  // around the circle, e.g. wrapDiff(7.2, 6) -> -0.8, so the deck can spin
+  // through unlimited laps and every card still resolves to a sane position.
+  function wrapDiff(d, n) {
+    d = ((d % n) + n) % n;
+    if (d > n / 2) d -= n;
+    return d;
+  }
+
+  function render(pos) {
+    cards.forEach((card, i) => {
+      const diff = wrapDiff(i - pos, N);
+      const absDiff = Math.abs(diff);
+      const angleDeg = diff * anglePerCard;
+      const rad = angleDeg * Math.PI / 180;
+
+      // real polar arc — cards sit on a curved shelf, not a flat line
+      const x = Math.sin(rad) * radius;
+      const z = -(1 - Math.cos(rad)) * radius;
+      const y = Math.pow(absDiff, 1.15) * 10;
+      const rotateY = -angleDeg * 1.35;
+      const scale = 1 - Math.min(absDiff * 0.1, 0.42);
+      const opacity = 1 - Math.min(absDiff * 0.22, 0.65);
+
+      gsap.set(card, {
+        x, y, z, rotateY,
+        opacity,
+        zIndex: Math.round(100 - absDiff * 10),
+        transformOrigin: '50% 50%'
+      });
+      card.dataset.baseScale = scale;
+      if (!card.matches(':hover')) gsap.set(card, { scale });
+    });
+  }
+
+  render(0);
+
+  // true infinite loop: pos sweeps continuously across several laps of the
+  // deck, wrapDiff() resolves every card's position modulo N, so there is
+  // no "first" or "last" card and no dead-end edge to get stuck against —
+  // scrolling all the way through just keeps cycling the same 6 cards.
+  const LAPS = 2.2;
+  const posObj = { v: 0 };
+  gsap.to(posObj, {
+    v: N * LAPS,
+    ease: 'none',
+    onUpdate: () => render(posObj.v),
+    scrollTrigger: {
+      trigger: '.pin-height-3',
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.25, // light smoothing — easy, not mechanical, but still fast
+      pin: '.pin-spacer-3',
+      anticipatePin: 1
+    }
+  });
+
+  /* hover: enlarge the card under the cursor */
+  cards.forEach((card, i) => {
+    card.addEventListener('mouseenter', () => {
+      cursor.classList.add('hover');
+      card.style.zIndex = 200;
+      scaleTo[i](Number(card.dataset.baseScale || 1) * 1.35);
+    });
+    card.addEventListener('mouseleave', () => {
+      cursor.classList.remove('hover');
+      scaleTo[i](Number(card.dataset.baseScale || 1));
+    });
+  });
+})();
+
+/* ---------- 4e. Video cards flying along an S-curve path, scroll-driven ---------- */
+(() => {
+  const stage = document.getElementById('pcStage');
+  const pathEl = document.getElementById('pcPath');
+  const totalLen = pathEl.getTotalLength();
+
+  const videos = [
+    'materials_video/IMG_6559.MP4',
+    'materials_video/IMG_6561.MP4',
+    'materials_video/IMG_6562.MP4',
+    'materials_video/IMG_6563.MP4',
+    'materials_video/IMG_6564.MP4',
+    'materials_video/IMG_6571.MP4',
+    'materials_video/IMG_6572.MP4',
+    'materials_video/IMG_6573.MP4',
+    'materials_video/IMG_6574.MP4'
+  ];
+
+  const CARD_COUNT = 12; // more cards than unique videos -> some repeat, as requested
+  const cards = [];
+  for (let i = 0; i < CARD_COUNT; i++) {
+    const card = document.createElement('div');
+    card.className = 'pc-card';
+    const video = document.createElement('video');
+    video.src = videos[i % videos.length];
+    video.autoplay = true;
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute('preload', 'auto');
+    card.appendChild(video);
+    stage.appendChild(card);
+    cards.push(card);
+    video.play().catch(() => {});
+  }
+
+  const scaleTo = cards.map(card => gsap.quickTo(card, 'scale', { duration: 0.3, ease: 'power3.out' }));
+  cards.forEach((card, i) => {
+    card.dataset.baseScale = 1;
+    card.addEventListener('mouseenter', () => {
+      cursor.classList.add('hover');
+      card.style.zIndex = 50;
+      scaleTo[i](1.18);
+    });
+    card.addEventListener('mouseleave', () => {
+      cursor.classList.remove('hover');
+      card.style.zIndex = '';
+      scaleTo[i](1);
+    });
+  });
+
+  // viewBox units -> actual rendered pixel units of the stage
+  function toStagePx(pt) {
+    const vbW = 1600, vbH = 700;
+    const w = stage.clientWidth, h = stage.clientHeight;
+    return { x: (pt.x / vbW) * w, y: (pt.y / vbH) * h };
+  }
+
+  // fixed "spotlight" point along the path — whichever card is passing
+  // through here grows large, then shrinks back as it moves on and the
+  // next card in line takes its turn.
+  const SPOTLIGHT_LEN = totalLen * 0.5;
+  const SPOTLIGHT_RANGE = totalLen * 0.11;
+  const SPOTLIGHT_SCALE = 2.4;
+
+  function wrapDist(a, b) {
+    const d = Math.abs(a - b);
+    return Math.min(d, totalLen - d);
+  }
+
+  function render(shift) {
+    cards.forEach((card, i) => {
+      let len = ((i / CARD_COUNT) * totalLen - shift) % totalLen;
+      if (len < 0) len += totalLen;
+
+      const p0 = pathEl.getPointAtLength(len);
+      const p1 = pathEl.getPointAtLength(Math.min(len + 1, totalLen));
+      const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180 / Math.PI;
+      const pos = toStagePx(p0);
+
+      // fade cards out as they near the off-screen ends of the path
+      const edgeFade = Math.min(len / (totalLen * 0.08), (totalLen - len) / (totalLen * 0.08), 1);
+
+      // spotlight: grow smoothly as the card passes the center point
+      const dist = wrapDist(len, SPOTLIGHT_LEN);
+      const t = Math.max(0, 1 - dist / SPOTLIGHT_RANGE);
+      const eased = t * t * (3 - 2 * t); // smoothstep, so the grow/shrink feels smooth
+      const spotlightScale = 1 + eased * (SPOTLIGHT_SCALE - 1);
+
+      gsap.set(card, {
+        x: pos.x, y: pos.y,
+        rotate: angle * (1 - eased), // levels out to face the viewer at peak size
+        scale: spotlightScale,
+        opacity: Math.max(edgeFade, 0),
+        zIndex: Math.round(eased * 100)
+      });
+    });
+  }
+
+  render(0);
+
+  gsap.to({ v: 0 }, {
+    v: totalLen * 2.4,
+    ease: 'none',
+    onUpdate: function () { render(this.targets()[0].v); },
+    scrollTrigger: {
+      trigger: '.path-cards-section',
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: 0.4
+    }
+  });
+
+  window.addEventListener('resize', () => render(0));
+})();
+
+/* ---------- 4f. Video cards on a diagonal staircase path — grow larger as they descend ---------- */
+(() => {
+  const stage = document.getElementById('dcStage');
+  const pathEl = document.getElementById('dcPath');
+  const totalLen = pathEl.getTotalLength();
+
+  const videos = [
+    'materials_video/IMG_6559.MP4',
+    'materials_video/IMG_6561.MP4',
+    'materials_video/IMG_6562.MP4',
+    'materials_video/IMG_6563.MP4',
+    'materials_video/IMG_6564.MP4',
+    'materials_video/IMG_6571.MP4',
+    'materials_video/IMG_6572.MP4',
+    'materials_video/IMG_6573.MP4',
+    'materials_video/IMG_6574.MP4'
+  ];
+
+  const CARD_COUNT = 12;
+  const cards = [];
+  for (let i = 0; i < CARD_COUNT; i++) {
+    const card = document.createElement('div');
+    card.className = 'dc-card';
+    const video = document.createElement('video');
+    video.src = videos[(i + 4) % videos.length]; // offset so it doesn't mirror the section above
+    video.autoplay = true;
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute('preload', 'auto');
+    card.appendChild(video);
+    stage.appendChild(card);
+    cards.push(card);
+    video.play().catch(() => {});
+  }
+
+  const scaleTo = cards.map(card => gsap.quickTo(card, 'scale', { duration: 0.3, ease: 'power3.out' }));
+  cards.forEach((card, i) => {
+    card.addEventListener('mouseenter', () => {
+      cursor.classList.add('hover');
+      card.style.zIndex = 200;
+      scaleTo[i](Number(card.dataset.baseScale || 1) * 1.15);
+    });
+    card.addEventListener('mouseleave', () => {
+      cursor.classList.remove('hover');
+      card.style.zIndex = card.dataset.z || '';
+      scaleTo[i](Number(card.dataset.baseScale || 1));
+    });
+  });
+
+  function toStagePx(pt) {
+    const vbW = 1600, vbH = 900;
+    const w = stage.clientWidth, h = stage.clientHeight;
+    return { x: (pt.x / vbW) * w, y: (pt.y / vbH) * h };
+  }
+
+  const MIN_SCALE = 0.4, MAX_SCALE = 1.9;
+
+  function render(shift) {
+    cards.forEach((card, i) => {
+      let len = ((i / CARD_COUNT) * totalLen - shift) % totalLen;
+      if (len < 0) len += totalLen;
+
+      const p0 = pathEl.getPointAtLength(len);
+      const p1 = pathEl.getPointAtLength(Math.min(len + 1, totalLen));
+      const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180 / Math.PI;
+      const pos = toStagePx(p0);
+
+      // scale grows the further along the path a card has travelled —
+      // small where the guide starts (top-left), large by the time it
+      // reaches the bottom-right, like a staircase of thumbnails.
+      const progress = len / totalLen;
+      const scale = MIN_SCALE + progress * (MAX_SCALE - MIN_SCALE);
+      const edgeFade = Math.min(len / (totalLen * 0.06), (totalLen - len) / (totalLen * 0.06), 1);
+      const z = Math.round(progress * 100);
+
+      card.dataset.baseScale = scale;
+      card.dataset.z = z;
+      if (!card.matches(':hover')) {
+        gsap.set(card, {
+          x: pos.x, y: pos.y,
+          rotate: angle,
+          scale,
+          opacity: Math.max(edgeFade, 0),
+          zIndex: z
+        });
+      } else {
+        gsap.set(card, { x: pos.x, y: pos.y, rotate: angle, zIndex: 200 });
+      }
+    });
+  }
+
+  render(0);
+
+  gsap.to({ v: 0 }, {
+    v: totalLen * 2.4,
+    ease: 'none',
+    onUpdate: function () { render(this.targets()[0].v); },
+    scrollTrigger: {
+      trigger: '.diag-cards-section',
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: 0.4
+    }
+  });
+
+  window.addEventListener('resize', () => render(0));
+})();
+
+/* ---------- 5. Custom cursor ---------- */
+const cursor = document.getElementById('cursor');
+const cursorX = gsap.quickTo(cursor, 'x', { duration: 0.5, ease: 'power3.out' });
+const cursorY = gsap.quickTo(cursor, 'y', { duration: 0.5, ease: 'power3.out' });
+window.addEventListener('mousemove', e => {
+  cursorX(e.clientX);
+  cursorY(e.clientY);
+});
+
+/* ---------- 6. Magnetic effect (buttons, links) ---------- */
+document.querySelectorAll('.magnetic').forEach(el => {
+  const xTo = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'power3.out' });
+  const yTo = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
+
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => {
+    cursor.classList.remove('hover');
+    xTo(0); yTo(0);
+  });
+  el.addEventListener('mousemove', e => {
+    const rect = el.getBoundingClientRect();
+    const relX = e.clientX - rect.left - rect.width / 2;
+    const relY = e.clientY - rect.top - rect.height / 2;
+    xTo(relX * 0.35);
+    yTo(relY * 0.35);
+  });
+});
+
+/* ---------- 6b. Nav links: slot-machine hover roll ---------- */
+document.querySelectorAll('.nav-link').forEach(link => {
+  const inner = link.querySelector('.nav-link-inner');
+  const lineHeight = link.querySelector('.nav-link-line').offsetHeight;
+  const rollTo = gsap.quickTo(inner, 'y', { duration: 0.15, ease: 'power1.out' });
+
+  link.addEventListener('mouseenter', () => rollTo(-lineHeight));
+  link.addEventListener('mouseleave', () => rollTo(0));
+});
+
+/* ---------- 6c. Burger menu (mobile) ---------- */
+(() => {
+  const burger = document.getElementById('burgerBtn');
+  const mobileNav = document.getElementById('mobileNav');
+  if (!burger || !mobileNav) return;
+
+  const closeMenu = () => {
+    burger.classList.remove('is-open');
+    mobileNav.classList.remove('is-open');
+    lenis.start();
+  };
+  const openMenu = () => {
+    burger.classList.add('is-open');
+    mobileNav.classList.add('is-open');
+    lenis.stop();
+  };
+
+  burger.addEventListener('click', () => {
+    if (mobileNav.classList.contains('is-open')) closeMenu(); else openMenu();
+  });
+
+  mobileNav.querySelectorAll('.mobile-nav-link').forEach(link => {
+    link.addEventListener('click', closeMenu);
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 900) closeMenu();
+  });
+})();
+</script>
+</body>
+</html>
