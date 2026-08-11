@@ -1208,6 +1208,43 @@ gsap.ticker.add(time => lenis.raf(time * 1000));
 gsap.ticker.lagSmoothing(0);
 lenis.stop();
 
+/* ---------- 1a. Lazy video loading — only fetch/play videos once their
+   section is about to scroll into view, so the hero video isn't fighting
+   a dozen other clips for bandwidth on first load. ---------- */
+function lazyLoadVideosOnApproach(sectionSelector, container) {
+  const section = document.querySelector(sectionSelector);
+  if (!section) return;
+
+  let done = false;
+  const trigger = () => {
+    if (done) return;
+    done = true;
+    container.querySelectorAll('video[data-src]').forEach(video => {
+      video.src = video.dataset.src;
+      video.removeAttribute('data-src');
+      video.setAttribute('preload', 'auto');
+      video.load();
+      video.play().catch(() => {});
+    });
+    io.disconnect();
+    lenis.off('scroll', scrollFallback);
+  };
+
+  const io = new IntersectionObserver((entries) => {
+    if (entries.some(e => e.isIntersecting)) trigger();
+  }, { rootMargin: '600px 0px' });
+  io.observe(section);
+
+  // fallback in case IntersectionObserver callbacks don't fire promptly
+  // in some environment (e.g. certain smooth-scroll/virtualization setups)
+  const scrollFallback = () => {
+    const rect = section.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 600 && rect.bottom > -600) trigger();
+  };
+  lenis.on('scroll', scrollFallback);
+  scrollFallback();
+}
+
 /* ---------- 2. Hero: split-text char stagger ---------- */
 function splitChars(el){
   const text = el.textContent;
@@ -1343,6 +1380,7 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
   }
 
   const introTl = gsap.timeline({
+    paused: true,
     onComplete: () => {
       document.documentElement.style.overflow = '';
       wipe.remove();
@@ -1352,13 +1390,15 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
   });
   window.__introTl = introTl;
 
-  /* counter 0 -> 100 */
+  /* counter — one shared object so the "waiting for video" crawl below
+     hands off smoothly into this final leg instead of jumping */
   const counterObj = { v: 0 };
+  const updateCounter = () => { counterEl.textContent = String(Math.round(counterObj.v)).padStart(2, '0'); };
   introTl.to(counterObj, {
     v: 100,
-    duration: 1.5,
-    ease: 'power2.inOut',
-    onUpdate: () => { counterEl.textContent = String(Math.round(counterObj.v)).padStart(2, '0'); }
+    duration: 0.5,
+    ease: 'power2.out',
+    onUpdate: updateCounter
   });
 
   /* curtain closes over the viewfinder, left to right */
@@ -1380,6 +1420,34 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
     ease: 'power4.inOut',
     stagger: 0.05
   }, '+=0.1');
+
+  /* Hold the counter on a slow, decelerating crawl while the hero video
+     actually buffers in the background, then hand off to the real
+     timeline above once it's ready to play smoothly (or after a hard
+     cap, so a slow connection never leaves the visitor stuck here). */
+  const heroVideoEl = document.querySelector('.hero-video');
+  const holdTween = gsap.to(counterObj, {
+    v: 94,
+    duration: 7,
+    ease: 'power1.out',
+    onUpdate: updateCounter
+  });
+
+  let revealed = false;
+  function reveal() {
+    if (revealed) return;
+    revealed = true;
+    holdTween.kill();
+    introTl.play();
+  }
+
+  if (heroVideoEl.readyState >= 3) {
+    reveal();
+  } else {
+    heroVideoEl.addEventListener('canplay', reveal, { once: true });
+    heroVideoEl.addEventListener('loadeddata', reveal, { once: true });
+  }
+  setTimeout(reveal, 6000); // hard cap for slow connections
 })();
 
 /* ---------- 2c. Header theme: dark by default (video hero), light over the white sections ---------- */
@@ -1655,13 +1723,11 @@ gsap.fromTo('.work-heading',
   ];
 
   stage.innerHTML = videos.map(src =>
-    `<div class="cf-card"><video src="${src}" autoplay muted loop playsinline preload="auto"></video></div>`
+    `<div class="cf-card"><video data-src="${src}" muted loop playsinline preload="none"></video></div>`
   ).join('');
   const cards = gsap.utils.toArray(stage.querySelectorAll('.cf-card'));
-  cards.forEach(card => {
-    const v = card.querySelector('video');
-    v.play().catch(() => {});
-  });
+
+  lazyLoadVideosOnApproach('.h-texts-3', stage);
   const N = cards.length;
   const anglePerCard = 22;  // deg — how tightly the deck bows around the arc
   const radius = 720;       // px — how deep the arc bows away from the viewer
@@ -1763,17 +1829,20 @@ gsap.fromTo('.work-heading',
     const card = document.createElement('div');
     card.className = 'pc-card';
     const video = document.createElement('video');
-    video.src = videos[i % videos.length];
-    video.autoplay = true;
+    video.dataset.src = videos[i % videos.length];
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
-    video.setAttribute('preload', 'auto');
+    video.setAttribute('preload', 'none');
     card.appendChild(video);
     stage.appendChild(card);
     cards.push(card);
-    video.play().catch(() => {});
   }
+
+  // lazy-load: only start fetching/playing these videos once the section is
+  // about to scroll into view, so they don't compete with the hero video
+  // for bandwidth on first load.
+  lazyLoadVideosOnApproach('.path-cards-section', stage);
 
   const scaleTo = cards.map(card => gsap.quickTo(card, 'scale', { duration: 0.3, ease: 'power3.out' }));
   cards.forEach((card, i) => {
@@ -1879,17 +1948,17 @@ gsap.fromTo('.work-heading',
     const card = document.createElement('div');
     card.className = 'dc-card';
     const video = document.createElement('video');
-    video.src = videos[(i + 4) % videos.length]; // offset so it doesn't mirror the section above
-    video.autoplay = true;
+    video.dataset.src = videos[(i + 4) % videos.length]; // offset so it doesn't mirror the section above
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
-    video.setAttribute('preload', 'auto');
+    video.setAttribute('preload', 'none');
     card.appendChild(video);
     stage.appendChild(card);
     cards.push(card);
-    video.play().catch(() => {});
   }
+
+  lazyLoadVideosOnApproach('.diag-cards-section', stage);
 
   const scaleTo = cards.map(card => gsap.quickTo(card, 'scale', { duration: 0.3, ease: 'power3.out' }));
   cards.forEach((card, i) => {
