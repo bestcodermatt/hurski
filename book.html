@@ -32,6 +32,17 @@
     background-image:radial-gradient(rgba(255,255,255,0.09) 1px, transparent 1px);
     background-size:26px 26px;
   }
+  #bgDots{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+    z-index:-1;
+    display:none;
+  }
+  @media (hover:hover) and (pointer:fine){
+    body{ background-image:none; }
+    #bgDots{ display:block; }
+  }
 
   header{
     display:flex; align-items:center; justify-content:space-between;
@@ -67,7 +78,7 @@
     font-family:'JetBrains Mono', monospace;
     font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
     color:var(--accent);
-    margin:0 0 18px;
+    margin:0;
     display:flex; align-items:center; gap:9px;
   }
   .eyebrow-dot{
@@ -254,13 +265,14 @@
 </head>
 <body>
 
+<canvas id="bgDots"></canvas>
+
 <header>
   <a class="back-link" href="index.html">← Back</a>
+  <p class="eyebrow"><span class="eyebrow-dot"></span>Book a shoot</p>
 </header>
 
 <div class="wrap">
-  <p class="eyebrow"><span class="eyebrow-dot"></span>Book a shoot</p>
-  <h1>Shop on camera.</h1>
 
   <form id="bookForm" action="https://formsubmit.co/uxhurski@gmail.com" method="POST" novalidate>
     <!-- FormSubmit config -->
@@ -318,16 +330,10 @@
       </div>
     </div>
 
-    <div class="field-row">
-      <div class="field">
-        <label for="f-email">Email<span class="req">*</span></label>
-        <input id="f-email" name="Email" type="email" placeholder="you@company.com" required>
-        <span class="field-error">Please enter a valid email.</span>
-      </div>
-      <div class="field">
-        <label for="f-phone">Phone<span class="opt">optional</span></label>
-        <input id="f-phone" name="Phone" type="tel" placeholder="(647) 555-0123">
-      </div>
+    <div class="field">
+      <label for="f-email">Email<span class="req">*</span></label>
+      <input id="f-email" name="Email" type="email" placeholder="you@company.com" required>
+      <span class="field-error">Please enter a valid email.</span>
     </div>
 
     <div class="field">
@@ -351,6 +357,76 @@
 </div>
 
 <script>
+  // arriving here means the intro loader already played (or doesn't need
+  // to) — mark the session so navigating back to index.html skips its
+  // reticle/counter replay and drops straight into the homepage
+  sessionStorage.setItem('hurskiIntroPlayed', '1');
+
+  // dot-matrix ripple backdrop, desktop only — matches the hover effect on the main site
+  if (window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+    const canvas = document.getElementById('bgDots');
+    const ctx = canvas.getContext('2d');
+    const GAP = 26, RADIUS = 160, BASE_R = 1.4, MAX_R = 4.2, PUSH = 14;
+    let w = 0, h = 0, dots = [];
+    let mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999 };
+
+    function resize() {
+      w = canvas.width = window.innerWidth * devicePixelRatio;
+      h = canvas.height = window.innerHeight * devicePixelRatio;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+
+      dots = [];
+      const cols = Math.ceil(window.innerWidth / GAP) + 1;
+      const rows = Math.ceil(window.innerHeight / GAP) + 1;
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          dots.push({ x: i * GAP, y: j * GAP, ox: i * GAP, oy: j * GAP });
+        }
+      }
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    window.addEventListener('mousemove', e => {
+      mouse.tx = e.clientX;
+      mouse.ty = e.clientY;
+    });
+
+    function tick() {
+      mouse.x += (mouse.tx - mouse.x) * 0.12;
+      mouse.y += (mouse.ty - mouse.y) * 0.12;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+
+      for (let i = 0; i < dots.length; i++) {
+        const d = dots[i];
+        const dx = d.ox - mouse.x, dy = d.oy - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const t = Math.max(0, 1 - dist / RADIUS);
+
+        const angle = Math.atan2(dy, dx);
+        const targetX = d.ox + Math.cos(angle) * PUSH * t;
+        const targetY = d.oy + Math.sin(angle) * PUSH * t;
+        d.x += (targetX - d.x) * 0.18;
+        d.y += (targetY - d.y) * 0.18;
+
+        const r = BASE_R + (MAX_R - BASE_R) * t;
+        if (r <= 0.05) continue;
+
+        ctx.globalAlpha = 0.25 + t * 0.75;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(tick);
+    }
+    tick();
+  }
+
   const form = document.getElementById('bookForm');
   const successPanel = document.getElementById('successPanel');
 

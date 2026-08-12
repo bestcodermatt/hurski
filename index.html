@@ -132,6 +132,12 @@
     transition:color .35s ease;
   }
   .site-header-new.is-light{ color:#0f0f0f; }
+  /* while the mobile menu (dark overlay) is open, force the light-on-dark
+     icon colors regardless of scroll position, or they can end up invisible
+     against the overlay */
+  .site-header-new.menu-open{ color:var(--fg) !important; }
+  .site-header-new.menu-open .logo-symbol-white{ opacity:1 !important; }
+  .site-header-new.menu-open .logo-symbol-black{ opacity:0 !important; }
 
   .logo-mark{
     position:relative;
@@ -1490,6 +1496,20 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
   const preloader = document.getElementById('preloader');
   const wipe = document.getElementById('plWipe');
   const counterEl = document.getElementById('plCounter');
+  const heroVideoEl = document.querySelector('.hero-video');
+  ensureAutoplay(heroVideoEl);
+
+  /* already played the intro once this browser session (e.g. came back
+     via a link from another page) — skip straight to the hero, no
+     reticle/counter replay */
+  if (sessionStorage.getItem('hurskiIntroPlayed')) {
+    preloader.style.display = 'none';
+    wipe.remove();
+    lenis.start();
+    heroTl.play();
+    return;
+  }
+  sessionStorage.setItem('hurskiIntroPlayed', '1');
 
   document.documentElement.style.overflow = 'hidden';
 
@@ -1550,8 +1570,6 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
      actually buffers in the background, then hand off to the real
      timeline above once it's ready to play smoothly (or after a hard
      cap, so a slow connection never leaves the visitor stuck here). */
-  const heroVideoEl = document.querySelector('.hero-video');
-  ensureAutoplay(heroVideoEl);
   const holdTween = gsap.to(counterObj, {
     v: 94,
     duration: 7,
@@ -2202,16 +2220,19 @@ document.querySelectorAll('.nav-link').forEach(link => {
 (() => {
   const burger = document.getElementById('burgerBtn');
   const mobileNav = document.getElementById('mobileNav');
+  const header = document.querySelector('.site-header-new');
   if (!burger || !mobileNav) return;
 
   const closeMenu = () => {
     burger.classList.remove('is-open');
     mobileNav.classList.remove('is-open');
+    if (header) header.classList.remove('menu-open');
     lenis.start();
   };
   const openMenu = () => {
     burger.classList.add('is-open');
     mobileNav.classList.add('is-open');
+    if (header) header.classList.add('menu-open');
     lenis.stop();
   };
 
