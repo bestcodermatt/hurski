@@ -1500,15 +1500,9 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
   ensureAutoplay(heroVideoEl);
 
   /* already played the intro once this browser session (e.g. came back
-     via a link from another page) — skip straight to the hero, no
-     reticle/counter replay */
-  if (sessionStorage.getItem('hurskiIntroPlayed')) {
-    preloader.style.display = 'none';
-    wipe.remove();
-    lenis.start();
-    heroTl.play();
-    return;
-  }
+     via a link from another page) — skip the reticle/percentage wait,
+     but still play the quick curtain-wipe reveal below */
+  const skipWait = !!sessionStorage.getItem('hurskiIntroPlayed');
   sessionStorage.setItem('hurskiIntroPlayed', '1');
 
   document.documentElement.style.overflow = 'hidden';
@@ -1585,7 +1579,7 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
     introTl.play();
   }
 
-  if (heroVideoEl.readyState >= 3) {
+  if (skipWait || heroVideoEl.readyState >= 3) {
     reveal();
   } else {
     heroVideoEl.addEventListener('canplay', reveal, { once: true });
