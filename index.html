@@ -674,7 +674,7 @@
     font-size:0.72rem; font-weight:600; letter-spacing:0; border:1.5px solid #0f0f0f;
     border-radius:8px; padding:3px 8px;
   }
-  .plan-for{ margin:8px 0 26px; color:#6b6b6b; font-size:0.98rem; letter-spacing:-0.01em; }
+  .plan-for{ margin:8px 0 26px; min-height:3.1em; color:#6b6b6b; font-size:0.98rem; letter-spacing:-0.01em; }
   .plan-price{ display:flex; align-items:baseline; gap:10px; margin-bottom:6px; }
   .plan-price strong{ font-size:3.4rem; font-weight:700; letter-spacing:-0.05em; line-height:1; }
   .plan-price span{ color:#6b6b6b; font-size:0.9rem; line-height:1.25; }
@@ -709,6 +709,7 @@
     .pricing-section{ padding:70px 5vw 30px; }
     .plans{ grid-template-columns:1fr; }
     .plan-price strong{ font-size:3rem; }
+    .plan-for{ min-height:0; }
     .pricing-offer{ padding:14px 16px; }
   }
 
@@ -1238,7 +1239,7 @@
       <p class="plan-for">For shops that are just starting with video</p>
       <div class="plan-price"><strong>$900</strong><span>per month<br>1 shoot day</span></div>
       <p class="plan-first">First month $720</p>
-      <a class="plan-cta" href="book.html?plan=starter">Get Starter</a>
+      <a class="plan-cta" href="book.html?plan=starter">Book a trial</a>
       <p class="plan-note">No long contract</p>
       <hr>
       <ul>
@@ -1257,7 +1258,7 @@
       <p class="plan-for">For shops that want steady content every week</p>
       <div class="plan-price"><strong>$1,800</strong><span>per month<br>2 shoot days</span></div>
       <p class="plan-first">First month $1,440</p>
-      <a class="plan-cta" href="book.html?plan=growth">Get Growth</a>
+      <a class="plan-cta" href="book.html?plan=growth">Book a trial</a>
       <p class="plan-note">Best value for regular posting</p>
       <hr>
       <p class="plan-lead">Everything in Starter plus</p>
@@ -1277,7 +1278,7 @@
       <p class="plan-for">For studios that want a full visual brand</p>
       <div class="plan-price"><strong>$3,200</strong><span>per month<br>4 shoot days</span></div>
       <p class="plan-first">First month $2,560</p>
-      <a class="plan-cta" href="book.html?plan=pro">Get Pro</a>
+      <a class="plan-cta" href="book.html?plan=pro">Book a trial</a>
       <p class="plan-note">Custom plan available</p>
       <hr>
       <p class="plan-lead">Everything in Growth plus</p>
@@ -2385,6 +2386,15 @@ document.querySelectorAll('.nav-link').forEach(link => {
   link.addEventListener('mouseenter', () => rollTo(-lineHeight));
   link.addEventListener('mouseleave', () => rollTo(0));
 });
+
+/* ---------- Pricing: fade/slide in on scroll ---------- */
+(() => {
+  const opts = (trigger) => ({ scrollTrigger: { trigger, start: 'top 88%', once: true } });
+  gsap.from('.pricing-head', { y: 40, opacity: 0, duration: 0.9, ease: 'power3.out', ...opts('.pricing-head') });
+  gsap.from('.pricing-offer', { y: 40, opacity: 0, duration: 0.9, ease: 'power3.out', ...opts('.pricing-offer') });
+  gsap.from('.plan', { y: 60, opacity: 0, duration: 1, ease: 'power3.out', stagger: 0.15, ...opts('.plans') });
+  gsap.from('.pricing-foot', { opacity: 0, duration: 0.8, ease: 'power2.out', ...opts('.pricing-foot') });
+})();
 
 /* ---------- 6c. Burger menu (mobile) ---------- */
 (() => {
