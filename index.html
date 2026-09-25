@@ -1327,10 +1327,13 @@ document.querySelectorAll('video[autoplay]').forEach(v => ensureAutoplay(v));
 /* ---------- 1b. Lazy video loading — only fetch/play videos once their
    section is about to scroll into view, so the hero video isn't fighting
    a dozen other clips for bandwidth on first load. ---------- */
+const __lazyPreloaders = [];   // trigger() of every lazy section, so the intro loader can fetch them all up front
+const __lazyVideos = [];       // every lazy <video>, to measure real loading progress
 function lazyLoadVideosOnApproach(sectionSelector, container, margin) {
   const section = document.querySelector(sectionSelector);
   if (!section) return;
   const m = margin || 600;
+  container.querySelectorAll('video[data-src]').forEach(v => __lazyVideos.push(v));
 
   let done = false;
   const trigger = () => {
@@ -1365,6 +1368,7 @@ function lazyLoadVideosOnApproach(sectionSelector, container, margin) {
     if (entries.some(e => e.isIntersecting)) trigger();
   }, { rootMargin: m + 'px 0px' });
   io.observe(section);
+  __lazyPreloaders.push(trigger);
 
   // fallback in case IntersectionObserver callbacks don't fire promptly
   // in some environment (e.g. certain smooth-scroll/virtualization setups)
@@ -1502,8 +1506,11 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
   /* already played the intro once this browser session (e.g. came back
      via a link from another page) — skip the reticle/percentage wait,
      but still play the quick curtain-wipe reveal below */
-  const skipWait = !!sessionStorage.getItem('hurskiIntroPlayed');
-  sessionStorage.setItem('hurskiIntroPlayed', '1');
+  let skipWait = false;
+  try {
+    skipWait = !!sessionStorage.getItem('hurskiIntroPlayed');
+    sessionStorage.setItem('hurskiIntroPlayed', '1');
+  } catch (e) {}
 
   document.documentElement.style.overflow = 'hidden';
 
@@ -1560,32 +1567,51 @@ initDotMatrix(document.querySelector('.pin-spacer-custom'), document.getElementB
     stagger: 0.05
   }, '+=0.1');
 
-  /* Hold the counter on a slow, decelerating crawl while the hero video
-     actually buffers in the background, then hand off to the real
-     timeline above once it's ready to play smoothly (or after a hard
-     cap, so a slow connection never leaves the visitor stuck here). */
-  const holdTween = gsap.to(counterObj, {
-    v: 94,
-    duration: 7,
-    ease: 'power1.out',
-    onUpdate: updateCounter
-  });
-
+  /* The counter tracks REAL loading: hero first, then every other video on
+     the page is fetched during the intro, and the percentage follows how
+     many are ready to play. The curtain lifts only once they all are (or
+     after a hard cap so a bad connection never traps the visitor). */
+  let holdTween = null;
   let revealed = false;
   function reveal() {
     if (revealed) return;
     revealed = true;
-    holdTween.kill();
+    if (holdTween) holdTween.kill();
     introTl.play();
   }
+  const setTarget = (v) => {
+    if (holdTween) holdTween.kill();
+    holdTween = gsap.to(counterObj, { v, duration: 0.6, ease: 'power1.out', onUpdate: updateCounter });
+  };
 
-  if (skipWait || heroVideoEl.readyState >= 3) {
-    reveal();
-  } else {
-    heroVideoEl.addEventListener('canplay', reveal, { once: true });
-    heroVideoEl.addEventListener('loadeddata', reveal, { once: true });
+  let started = false;
+  function startAll() {
+    if (started) return;
+    started = true;
+    __lazyPreloaders.forEach(t => t());
+    const check = () => {
+      if (revealed) return;
+      const vids = [heroVideoEl, ...__lazyVideos];
+      const ready = vids.filter(v => v.readyState >= 3).length;
+      setTarget(Math.min(94, (ready / vids.length) * 94));
+      if (ready === vids.length) reveal(); else setTimeout(check, 250);
+    };
+    check();
   }
-  setTimeout(reveal, 6000); // hard cap for slow connections
+
+  // lazy sections register themselves further down the script, so wait a tick
+  if (skipWait) {
+    setTimeout(() => { __lazyPreloaders.forEach(t => t()); reveal(); }, 0);
+  } else {
+    setTarget(6);
+    if (heroVideoEl.readyState >= 3) setTimeout(startAll, 0);
+    else {
+      heroVideoEl.addEventListener('canplay', startAll, { once: true });
+      heroVideoEl.addEventListener('loadeddata', startAll, { once: true });
+      setTimeout(startAll, 4000);
+    }
+    setTimeout(reveal, 22000); // hard cap for slow connections
+  }
 })();
 
 /* ---------- 2c. Header theme: dark by default (video hero), light over the white sections ---------- */
