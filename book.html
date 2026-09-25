@@ -280,6 +280,7 @@
     <input type="hidden" name="_template" value="table">
     <input type="hidden" name="_captcha" value="false">
     <input type="hidden" name="_next" value="https://hurski.space/book.html?sent=1">
+    <input type="hidden" name="Package" id="f-package" value="">
 
     <div class="field">
       <label>What kind of shoot?<span class="req">*</span></label>
@@ -426,6 +427,11 @@
     }
     tick();
   }
+
+  // package chosen on the pricing section (?plan=starter|growth|pro|trial)
+  const PLAN_NAMES = { starter:'Starter ($900/mo)', growth:'Growth ($1,800/mo)', pro:'Pro ($3,200/mo)', trial:'Trial Shoot ($199)' };
+  const planParam = new URLSearchParams(location.search).get('plan');
+  if (PLAN_NAMES[planParam]) document.getElementById('f-package').value = PLAN_NAMES[planParam];
 
   const form = document.getElementById('bookForm');
   const successPanel = document.getElementById('successPanel');

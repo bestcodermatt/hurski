@@ -638,6 +638,80 @@
   .cf-card img.is-ready, .cf-card video.is-ready{ opacity:1; }
 
   /* FAQ */
+
+  /* ===== Pricing / packages ===== */
+  .pricing-section{
+    position:relative; background:#ffffff; color:#0f0f0f;
+    padding:110px 6vw 60px;
+  }
+  .pricing-head{ max-width:1200px; margin:0 auto 34px; }
+  .pricing-heading{
+    font-family:'Schibsted Grotesk', sans-serif;
+    font-size:clamp(1.8rem, 3.4vw, 2.6rem);
+    font-weight:700; letter-spacing:-0.02em; margin:0 0 10px;
+  }
+  .pricing-sub{ margin:0; color:#6b6b6b; font-size:1.02rem; letter-spacing:-0.01em; }
+  .pricing-offer{
+    max-width:1200px; margin:0 auto 26px;
+    display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center; justify-content:space-between;
+    background:#f4f4f4; border-radius:16px; padding:16px 22px;
+    font-size:0.98rem; letter-spacing:-0.01em;
+  }
+  .pricing-offer b{ color:#ff3b30; font-weight:700; }
+  .pricing-offer a{ font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+  .plans{
+    max-width:1200px; margin:0 auto;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:20px; align-items:stretch;
+  }
+  .plan{
+    position:relative; display:flex; flex-direction:column;
+    border:1px solid #e4e4e4; border-radius:26px; padding:30px 28px 32px;
+    background:#fff;
+  }
+  .plan.is-popular{ background:#f4f4f4; border-color:#f4f4f4; }
+  .plan-name{ display:flex; align-items:center; gap:10px; font-size:1.7rem; font-weight:700; letter-spacing:-0.03em; margin:0; }
+  .plan-badge{
+    font-size:0.72rem; font-weight:600; letter-spacing:0; border:1.5px solid #0f0f0f;
+    border-radius:8px; padding:3px 8px;
+  }
+  .plan-for{ margin:8px 0 26px; color:#6b6b6b; font-size:0.98rem; letter-spacing:-0.01em; }
+  .plan-price{ display:flex; align-items:baseline; gap:10px; margin-bottom:6px; }
+  .plan-price strong{ font-size:3.4rem; font-weight:700; letter-spacing:-0.05em; line-height:1; }
+  .plan-price span{ color:#6b6b6b; font-size:0.9rem; line-height:1.25; }
+  .plan-old{ text-decoration:line-through; color:#a0a0a0; font-size:1.05rem; margin-right:2px; }
+  .plan-first{ margin:0 0 22px; min-height:1.3em; font-size:0.86rem; color:#ff3b30; font-weight:600; }
+  .plan-cta{
+    display:flex; justify-content:center; align-items:center;
+    height:56px; border-radius:999px; font-weight:600; font-size:1.02rem;
+    border:1.5px solid #dcdcdc; background:#fff; color:#0f0f0f;
+    transition:transform .25s ease, background .25s ease;
+  }
+  .is-popular .plan-cta{ background:#0f0f0f; border-color:#0f0f0f; color:#fff; }
+  .plan-cta:hover{ transform:translateY(-2px); }
+  .plan-note{ text-align:center; color:#7a7a7a; font-size:0.86rem; margin:12px 0 24px; }
+  .plan hr{ border:none; border-top:1px solid #e4e4e4; margin:0 0 20px; }
+  .is-popular hr{ border-top-color:#e0e0e0; }
+  .plan-lead{ margin:0 0 12px; color:#6b6b6b; font-size:0.98rem; }
+  .plan ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px; }
+  .plan li{ position:relative; padding-left:34px; font-size:0.98rem; color:#4a4a4a; letter-spacing:-0.01em; line-height:1.35; }
+  .plan li::before{
+    content:'\2713'; position:absolute; left:0; top:-1px;
+    width:22px; height:22px; border-radius:50%; background:#efefef; color:#0f0f0f;
+    font-size:0.78rem; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .is-popular li::before{ background:#e3e3e3; }
+  .plan li .tag{
+    margin-left:6px; font-size:0.7rem; font-weight:600; background:#fff; border:1px solid #e0e0e0;
+    border-radius:999px; padding:2px 8px; color:#0f0f0f;
+  }
+  .pricing-foot{ max-width:1200px; margin:22px auto 0; color:#7a7a7a; font-size:0.88rem; }
+  @media (max-width:900px){
+    .pricing-section{ padding:70px 5vw 30px; }
+    .plans{ grid-template-columns:1fr; }
+    .plan-price strong{ font-size:3rem; }
+    .pricing-offer{ padding:14px 16px; }
+  }
+
   .faq-section{
     position:relative; background:#ffffff; color:#0f0f0f;
     padding:40px 6vw 160px;
@@ -999,7 +1073,7 @@
         <span class="nav-link-line" aria-hidden="true">About</span>
       </span></span>
     </a>
-    <a href="#faqSection" class="nav-link">
+    <a href="#pricing" class="nav-link">
       <span class="nav-link-mask"><span class="nav-link-inner">
         <span class="nav-link-line">Pricing</span>
         <span class="nav-link-line" aria-hidden="true">Pricing</span>
@@ -1021,7 +1095,7 @@
 
 <div class="mobile-nav" id="mobileNav">
   <a href="#about-section" class="mobile-nav-link">About</a>
-  <a href="#faqSection" class="mobile-nav-link">Pricing</a>
+  <a href="#pricing" class="mobile-nav-link">Pricing</a>
   <a href="book.html" class="mobile-nav-link">Book Now</a>
 </div>
 
@@ -1076,9 +1150,9 @@
 <section class="work-section">
   <h2 class="work-heading">Work</h2>
   <div class="work-list">
-    <a class="work-row" href="#">
-      <span class="work-name">Case One</span>
-      <span class="work-status">Soon</span>
+    <a class="work-row" href="case-jetcar.html">
+      <span class="work-name">JETCAR</span>
+      <span class="work-status">Concept</span>
     </a>
     <a class="work-row" href="#">
       <span class="work-name">Case Two</span>
@@ -1146,6 +1220,82 @@
 </section>
 
 <!-- FAQ -->
+<!-- Pricing / packages -->
+<section class="pricing-section" id="pricing">
+  <div class="pricing-head">
+    <h2 class="pricing-heading">Packages</h2>
+    <p class="pricing-sub">Monthly content packages. Pick a level, change or pause any month.</p>
+  </div>
+
+  <div class="pricing-offer">
+    <span><b>New clients:</b> 20% off your first month, or start with a <b>Trial Shoot for $199</b> (credited toward any package).</span>
+    <a href="book.html?plan=trial">Book a trial &rarr;</a>
+  </div>
+
+  <div class="plans">
+    <article class="plan">
+      <h3 class="plan-name">Starter</h3>
+      <p class="plan-for">For shops that are just starting with video</p>
+      <div class="plan-price"><strong>$900</strong><span>per month<br>1 shoot day</span></div>
+      <p class="plan-first">First month $720</p>
+      <a class="plan-cta" href="book.html?plan=starter">Get Starter</a>
+      <p class="plan-note">No long contract</p>
+      <hr>
+      <ul>
+        <li>1 shoot day per month (up to 4 hours)</li>
+        <li>4 short vertical videos (Reels / Shorts)</li>
+        <li>12 edited photos</li>
+        <li>Editing, color and sound</li>
+        <li>2 ideas / scripts</li>
+        <li>1 revision round per video</li>
+        <li>Delivery in 7 days</li>
+      </ul>
+    </article>
+
+    <article class="plan is-popular">
+      <h3 class="plan-name">Growth <span class="plan-badge">Popular</span></h3>
+      <p class="plan-for">For shops that want steady content every week</p>
+      <div class="plan-price"><strong>$1,800</strong><span>per month<br>2 shoot days</span></div>
+      <p class="plan-first">First month $1,440</p>
+      <a class="plan-cta" href="book.html?plan=growth">Get Growth</a>
+      <p class="plan-note">Best value for regular posting</p>
+      <hr>
+      <p class="plan-lead">Everything in Starter plus</p>
+      <ul>
+        <li>2 shoot days per month</li>
+        <li>10 short videos + 1 longer video (60&ndash;90 sec)</li>
+        <li>30 edited photos</li>
+        <li>6 scripts and a monthly content plan</li>
+        <li>Captions, covers and posting-ready files</li>
+        <li>2 revision rounds per video</li>
+        <li>Monthly strategy call</li>
+      </ul>
+    </article>
+
+    <article class="plan">
+      <h3 class="plan-name">Pro</h3>
+      <p class="plan-for">For studios that want a full visual brand</p>
+      <div class="plan-price"><strong>$3,200</strong><span>per month<br>4 shoot days</span></div>
+      <p class="plan-first">First month $2,560</p>
+      <a class="plan-cta" href="book.html?plan=pro">Get Pro</a>
+      <p class="plan-note">Custom plan available</p>
+      <hr>
+      <p class="plan-lead">Everything in Growth plus</p>
+      <ul>
+        <li>4 shoot days per month</li>
+        <li>20 short videos + 1 brand film</li>
+        <li>60 edited photos</li>
+        <li>Full scripts and content calendar</li>
+        <li>3D and VFX effects <span class="tag">Extra</span></li>
+        <li>Advanced motion editing</li>
+        <li>Graphic design: better visual communication for your brand</li>
+        <li>Unlimited revisions and priority delivery</li>
+      </ul>
+    </article>
+  </div>
+  <p class="pricing-foot">Prices in USD, billed monthly. Travel outside Toronto / Hamilton / New York State is quoted separately.</p>
+</section>
+
 <section class="faq-section" id="faqSection">
   <h2 class="faq-heading">Frequently asked</h2>
   <div class="faq-list">
@@ -1182,7 +1332,7 @@
         <span class="faq-q-text">What does this cost?</span>
         <span class="faq-toggle"><span></span><span></span></span>
       </div>
-      <div class="faq-answer"><div><p>Single shoot days start around $350-500. Full packages with a brand film and website start around $2,500-4,000. Reach out with what you need and I'll send exact pricing.</p></div></div>
+      <div class="faq-answer"><div><p>Monthly packages start at $900 (Starter), $1,800 (Growth) and $3,200 (Pro), and new clients get 20% off the first month or a $199 trial shoot. A single shoot day starts around $350-500. See the Packages section above, or reach out and I'll send exact pricing.</p></div></div>
     </div>
     <div class="faq-item">
       <div class="faq-question">
