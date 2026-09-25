@@ -1228,11 +1228,6 @@
     <p class="pricing-sub">Monthly content packages. Pick a level, change or pause any month.</p>
   </div>
 
-  <div class="pricing-offer">
-    <span><b>New clients:</b> 20% off your first month, or start with a <b>Trial Shoot for $199</b> (credited toward any package).</span>
-    <a href="book.html?plan=trial">Book a trial &rarr;</a>
-  </div>
-
   <div class="plans">
     <article class="plan">
       <h3 class="plan-name">Starter</h3>
@@ -2391,7 +2386,6 @@ document.querySelectorAll('.nav-link').forEach(link => {
 (() => {
   const opts = (trigger) => ({ scrollTrigger: { trigger, start: 'top 88%', once: true } });
   gsap.from('.pricing-head', { y: 40, opacity: 0, duration: 0.9, ease: 'power3.out', ...opts('.pricing-head') });
-  gsap.from('.pricing-offer', { y: 40, opacity: 0, duration: 0.9, ease: 'power3.out', ...opts('.pricing-offer') });
   gsap.from('.plan', { y: 60, opacity: 0, duration: 1, ease: 'power3.out', stagger: 0.15, ...opts('.plans') });
   gsap.from('.pricing-foot', { opacity: 0, duration: 0.8, ease: 'power2.out', ...opts('.pricing-foot') });
 })();
